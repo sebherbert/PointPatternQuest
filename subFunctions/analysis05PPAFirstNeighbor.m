@@ -1,4 +1,4 @@
-function Analysis05PointPatternAnalysisFirstNeighbor(path,name,k,x,y,z,S,d123_all,d123_1)
+function analysis05PPAFirstNeighbor(path,name,k,x,y,z,S,d123_all,d123_1)
 %Point pattern analysis Type 3 in Type 1+2+3 (first neighbor)
 r=0:0.1:14; % bin size for the ecdf
 

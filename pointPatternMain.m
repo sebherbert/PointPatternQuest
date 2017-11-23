@@ -117,19 +117,19 @@ if exist([path,name,ext])
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %Main Functions
     
-    Analysis03PointPatternAnalysisFirstNeighbor(path,name,k,x,y,z,S,d12_all,d12_1)
+    analysis03PPAFirstNeighbor(path,name,k,x,y,z,S,d12_all,d12_1)
     %Point pattern analysis Type 2 in Type 1+2 (first neighbor)
     
     %     Analysis04PointPatternAnalysisSecondNeighbor(path,filename,k,x,y,z,S,d12_all,d12_1)
     %Point pattern analysis Type 2 in Type 1+2 (second neighbor)
     
-    Analysis05PointPatternAnalysisFirstNeighbor(path,name,k,x,y,z,S,d123_all,d123_1)
+    analysis05PPAFirstNeighbor(path,name,k,x,y,z,S,d123_all,d123_1)
     %Point pattern analysis Type 3 in Type 1+2+3 (first neighbor)
     
     %     Analysis06PointPatternAnalysisSecondNeighbor(path,filename,k,x,y,z,S,d123_all,d123_1)
     %Point pattern analysis Type 3 in Type 1+2+3 (second neighbor)
     
-    Analysis07PointPatternAnalysisFirstNeighbor(path,name,k,x,y,z,S,d123_all,d123_1)
+    analysis07PPAFirstNeighbor(path,name,k,x,y,z,S,d123_all,d123_1)
     %Point pattern analysis Type 2 distance to 3 in Type 1+2 (first neighbor)
     
 end
