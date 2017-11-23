@@ -30,10 +30,17 @@ plot(xScale,NN,'-r','linewidth',4);
 text(0.5,0.95,'95% and 99% intervals')
 text(0.5,0.9,[num2str(NumPermut),' random perm.'])
 
+% force the axes
+if 2*ceil(xScale(min(find(NN>0.9))))<14
+    axis([0 2*ceil(xScale(min(find(NN>0.9)))) 0 1]);
+else
+    axis([0 14 0 1]);
+end
+
 title(figTitle,'FontSize',10)
 
-savefig(figSavePath);
-
-savefig(figSavePath, 'tiffn');
+saveas(gcf,figSavePath);
+% saveas(gcf,figSavePath,'tiffn');
+saveas(gcf,figSavePath,'png');
 
 end
