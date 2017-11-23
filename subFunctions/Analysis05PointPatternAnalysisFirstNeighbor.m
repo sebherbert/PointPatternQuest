@@ -94,7 +94,8 @@ text(0.5,0.9,[num2str(NumPermut),' random perm.'])
 %         text(0.5,0.85,[num2str(d1min),'�m min dist.' ])
 title(['Type III (random permutations in I+II+III) CellDiameter=',num2str(CellDiameter,2),'{\mu}m'],'FontSize',10)
 
-save([path,name,'Case',num2str(k),'_Analysis05NN'],'dn');
+save([path,name,'Case',num2str(k),'_Analysis05NN'],'dn','G','r','Grand','Grandmean','Grandstd',...
+    'Grand5','Grand95','Grand1','Grand99');
 
 savefig([path,name,'Case',num2str(k),'_Analysis05Fig1']);
 

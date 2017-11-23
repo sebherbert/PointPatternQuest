@@ -63,12 +63,6 @@ for j=1:NumPermut
     end
 end
 
-%         save([name,'ALLrandperm',num2str(NumPermut),'d1min',num2str(d1min),'.mat'],'Grand');
-%         load([folder,name,'ALLrandperm',num2str(NumPermut),'d1min',num2str(d1min),'.mat'])
-
-
-
-
 for i=1:size(r,2)
     Grandmean(i)=mean(Grand(:,i));
     Grandstd(i)=std(Grand(:,i));
@@ -92,7 +86,8 @@ text(0.5,0.9,[num2str(NumPermut),' random perm.'])
 %         text(0.5,0.85,[num2str(d1min),'�m min dist.' ])
 title(['Type II (random permutations in I and II) CellDiameter=',num2str(CellDiameter,2),'�m'],'FontSize',10)
 
-save([path,name,'Case',num2str(k),'_Analysis03NN'],'dn');
+save([path,name,'Case',num2str(k),'_Analysis03NN'],'dn','G','r','Grand','Grandmean','Grandstd',...
+    'Grand5','Grand95','Grand1','Grand99');
 
 savefig([path,name,'Case',num2str(k),'_Analysis03Fig1']);
 
