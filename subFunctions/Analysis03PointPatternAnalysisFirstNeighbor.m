@@ -21,11 +21,6 @@ r=0:0.1:14;
 for i=1:size(r,2)
     G(i)=size(dn(dn<=r(i)),2)/size(dn,2);
 end
-figure
-plot(r,G,'-r','linewidth',4);hold on
-ylabel('Cumulative cell frequency');
-xlabel('distance to nearest neighbor (in cell diameter)');
-
 
 if 2*ceil(r(min(find(G>0.9))))<14
     axis([0 2*ceil(r(min(find(G>0.9)))) 0 1]);
@@ -63,35 +58,21 @@ for j=1:NumPermut
     end
 end
 
-for i=1:size(r,2)
-    Grandmean(i)=mean(Grand(:,i));
-    Grandstd(i)=std(Grand(:,i));
-    Grand5(i)=prctile(Grand(:,i),5);
-    Grand95(i)=prctile(Grand(:,i),95);
-    Grand1(i)=prctile(Grand(:,i),1);
-    Grand99(i)=prctile(Grand(:,i),99);
-end
-plot(r,Grandmean,'-k','linewidth',4);hold on
-%     plot(r,Grandmean-Grandstd,'-g');hold on
-%     plot(r,Grandmean+Grandstd,'-g');hold on
-plot(r,Grand5,'-','linewidth',3,'color',[0.6 0.6 0.6]);hold on
-plot(r,Grand95,'-','linewidth',3,'color',[0.6 0.6 0.6]);hold on
-plot(r,Grand1,'-','linewidth',1,'color',[0.6 0.6 0.6]);hold on
-plot(r,Grand99,'-','linewidth',1,'color',[0.6 0.6 0.6]);hold on
+% Display figure
+figTitle(['Type II (random permutations in I and II) CellDiameter=',num2str(CellDiameter,2),'{\mu}m'],'FontSize',10);
+figSavePath([path,name,'Case',num2str(k),'_Analysis07Fig1']);
 
+GrandAll = displaySimuPPQ(r, Grand, G, NumPermut, figTitle, figSavePath);
 
-plot(r,G,'-r','linewidth',4);hold on
-text(0.5,0.95,['95% and 99% intervals' ])
-text(0.5,0.9,[num2str(NumPermut),' random perm.'])
-%         text(0.5,0.85,[num2str(d1min),'�m min dist.' ])
-title(['Type II (random permutations in I and II) CellDiameter=',num2str(CellDiameter,2),'�m'],'FontSize',10)
+Grandmean = GrandAll.mean;
+Grandstd = GrandAll.std;
+Grand5 = GrandAll.iqr5;
+Grand95 = GrandAll.iqr95;
+Grand1 = GrandAll.iqr1;
+Grand99 = GrandAll.iqr99;
 
-save([path,name,'Case',num2str(k),'_Analysis03NN'],'dn','G','r','Grand','Grandmean','Grandstd',...
+save([path,name,'Case',num2str(k),'_Analysis05NN'],'dn','G','r','Grand','Grandmean','Grandstd',...
     'Grand5','Grand95','Grand1','Grand99');
-
-savefig([path,name,'Case',num2str(k),'_Analysis03Fig1']);
-
-saveas(gcf,[path,name,'Case',num2str(k),'_Analysis03Fig1'], 'tiffn');
 
 clear dn
 clear G
