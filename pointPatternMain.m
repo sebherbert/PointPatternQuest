@@ -45,6 +45,8 @@ filename = [name,ext];
 %%
 k=1;
 
+
+
 if exist([path,name,ext])
     disp([path,name,ext]);
     load([path,name,ext]);
@@ -133,7 +135,5 @@ if exist([path,name,ext])
     %Point pattern analysis Type 2 distance to 3 in Type 1+2 (first neighbor)
     
 end
-close all
-
 
 end

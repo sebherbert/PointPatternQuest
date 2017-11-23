@@ -5,6 +5,7 @@ function GrandAll = displaySimuPPQ(xScale, Grand, NN, NumPermut, figTitle, figSa
 % random distribution simulations
 
 GrandAll = {};
+GrandAll.all = Grand;
 for i=1:size(xScale,2)
     GrandAll.mean(i)=mean(Grand(:,i));
     GrandAll.std(i)=std(Grand(:,i));
@@ -20,13 +21,13 @@ ylabel('Cumulative cell frequency');
 xlabel('distance to nearest neighbor (in cell diameter)');
 
 hold on
-plot(xScale,GrandAll.mean,'-k','linewidth',4);
-plot(xScale,GrandAll.iqr5,'-','linewidth',3,'color',[0.6 0.6 0.6]);
-plot(xScale,GrandAll.iqr95,'-','linewidth',3,'color',[0.6 0.6 0.6]);
+plot(xScale,GrandAll.mean,'-k','linewidth',3);
+plot(xScale,GrandAll.iqr5,'-','linewidth',2,'color',[0.6 0.6 0.6]);
+plot(xScale,GrandAll.iqr95,'-','linewidth',2,'color',[0.6 0.6 0.6]);
 plot(xScale,GrandAll.iqr1,'-','linewidth',1,'color',[0.6 0.6 0.6]);
 plot(xScale,GrandAll.iqr99,'-','linewidth',1,'color',[0.6 0.6 0.6]);
 
-plot(xScale,NN,'-r','linewidth',4);
+plot(xScale,NN,'-r','linewidth',3);
 text(0.5,0.95,'95% and 99% intervals')
 text(0.5,0.9,[num2str(NumPermut),' random perm.'])
 
@@ -42,5 +43,13 @@ title(figTitle,'FontSize',10)
 saveas(gcf,figSavePath);
 % saveas(gcf,figSavePath,'tiffn');
 saveas(gcf,figSavePath,'png');
+
+% Could use a simple ecdf instead of the manual cdf
+% figure test
+% [f,x] = ecdf(dn);
+% hold on
+% plot(x,f,'.-');
+% plot(r,G,'.-');
+% plot(r,GrandAll.mean);
 
 end

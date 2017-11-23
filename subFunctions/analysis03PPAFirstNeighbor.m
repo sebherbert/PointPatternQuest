@@ -1,4 +1,4 @@
-function analysis03PPAFirstNeighbor(path,name,k,x,y,z,S,d12_all,d12_1)
+function fullResults = analysis03PPAFirstNeighbor(path,name,k,x,y,z,S,d12_all,d12_1)
 %Point pattern analysis Type 2 in Type 1+2 (first neighbor)
 r=0:0.1:14; % bin size for the ecdf
 
@@ -63,18 +63,15 @@ figSavePath = [path,name,'Case',num2str(k),'_Analysis03Fig1'];
 
 GrandAll = displaySimuPPQ(r, Grand, G, NumPermut, figTitle, figSavePath);
 
-Grandmean = GrandAll.mean;
-Grandstd = GrandAll.std;
-Grand5 = GrandAll.iqr5;
-Grand95 = GrandAll.iqr95;
-Grand1 = GrandAll.iqr1;
-Grand99 = GrandAll.iqr99;
+save([path,name,'Case',num2str(k),'_Analysis03NN'],'dn','G','r','Grand','GrandAll');
 
-save([path,name,'Case',num2str(k),'_Analysis03NN'],'dn','G','r','Grand','Grandmean','Grandstd',...
-    'Grand5','Grand95','Grand1','Grand99');
 
-clear dn
-clear G
+fullResults = {};
+fullResults.dn = dn;
+fullResults.G = G;
+fullResults.GrandAll = GrandAll;
+
+end
 
 
 
