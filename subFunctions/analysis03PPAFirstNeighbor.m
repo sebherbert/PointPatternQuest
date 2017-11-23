@@ -65,7 +65,6 @@ GrandAll = displaySimuPPQ(r, Grand, G, NumPermut, figTitle, figSavePath);
 
 save([path,name,'Case',num2str(k),'_Analysis03NN'],'dn','G','r','Grand','GrandAll');
 
-
 fullResults = {};
 fullResults.dn = dn;
 fullResults.G = G;

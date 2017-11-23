@@ -43,8 +43,25 @@ filename = [name,ext];
 % k=4 dm
 
 %%
+
 k=1;
 
+switch k
+    case 1 
+        brainPart = '_allSample';
+    case 2
+        brainPart = '_da';
+    case 3
+        brainPart = '_dl';
+    case 4
+        brainPart = '_dm';
+    otherwise
+        warning('Unexpected part of he brain. Stopping the analysis');
+end
+
+dataCombined = {};
+dataCombined.name = name;
+dataCombined.brainPart = brainPart;
 
 
 if exist([path,name,ext])
@@ -119,21 +136,23 @@ if exist([path,name,ext])
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %Main Functions
     
-    analysis03PPAFirstNeighbor(path,name,k,x,y,z,S,d12_all,d12_1)
+    dataCombined.t2vst2 = analysis03PPAFirstNeighbor(path,name,k,x,y,z,S,d12_all,d12_1);
     %Point pattern analysis Type 2 in Type 1+2 (first neighbor)
     
     %     Analysis04PointPatternAnalysisSecondNeighbor(path,filename,k,x,y,z,S,d12_all,d12_1)
     %Point pattern analysis Type 2 in Type 1+2 (second neighbor)
     
-    analysis05PPAFirstNeighbor(path,name,k,x,y,z,S,d123_all,d123_1)
+    dataCombined.t3vst3 = analysis05PPAFirstNeighbor(path,name,k,x,y,z,S,d123_all,d123_1);
     %Point pattern analysis Type 3 in Type 1+2+3 (first neighbor)
     
     %     Analysis06PointPatternAnalysisSecondNeighbor(path,filename,k,x,y,z,S,d123_all,d123_1)
     %Point pattern analysis Type 3 in Type 1+2+3 (second neighbor)
     
-    analysis07PPAFirstNeighbor(path,name,k,x,y,z,S,d123_all,d123_1)
+    dataCombined.t3vst2 = analysis07PPAFirstNeighbor(path,name,k,x,y,z,S,d123_all,d123_1);
     %Point pattern analysis Type 2 distance to 3 in Type 1+2 (first neighbor)
     
 end
+
+save([path,name,brainPart],'dataCombined');
 
 end
