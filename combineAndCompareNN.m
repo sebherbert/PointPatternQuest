@@ -60,9 +60,9 @@ NNtests = {'t2vst2','t3vst3','t3vst2'}; % tested cell types
 
 
 %% ks tests
-% ks intra population
-% conditions = {'Young','Old','Drug'}; % Conditions to be tested
-% ksIntra = ksTestIntra({dataYoung,dataOld,dataDrug},conditions,inds,bps,NNtests);
+ks intra population
+conditions = {'Young','Old','Drug'}; % Conditions to be tested
+ksIntra = ksTestIntra({dataYoung,dataOld,dataDrug},conditions,inds,bps,NNtests);
 % 
 % % ks inter population
 % conditions = {'Young','Old'}; % Conditions to be tested
@@ -74,34 +74,34 @@ NNtests = {'t2vst2','t3vst3','t3vst2'}; % tested cell types
 
 end
 
-% function ksIntra = ksTestIntra(fullData,conditions,inds,bps,NNtests)
-% % Calculates and return the individual and average ks tests inside a single
-% % population
-% 
-% % ks intra pop
-% ksIntra = {};
-% % example => ksIntra.condition.ind1.bps.NNtests = kstest2;
-% for NNtest = 1:numel(NNtests) % which test
-%     for bp = 1:numel(bps) % which brain part
-%         for condition = 1:numel(conditions) % which condition
-%             for ind1 = 1:numel(fieldnames(fullData{condition})) % which individual
-%                 dn1 = fullData{condition}.(inds{ind1}).(bps{bp}).(NNtests{NNtest}).dn;
-%                 for ind2 = ind1:numel(inds)
-%                     dn2 = fullData{condition}.(inds{ind2}).(bps{bp}).(NNtests{NNtest}).dn;
-%                     indsName = sprintf('%svs%s',inds{ind1},inds{ind2});
-%                     [h,p,k] = kstest2(dn1,dn2);
-%                     ksIntra.(conditions{condition}).(indsName).(bps{bp}).(NNtests{NNtest}).h = h;
-%                     ksIntra.(conditions{condition}).(indsName).(bps{bp}).(NNtests{NNtest}).p = p;
-%                     ksIntra.(conditions{condition}).(indsName).(bps{bp}).(NNtests{NNtest}).k = k;
-%                 end
-%             end
-%         end
-%     end
-% end
-% 
-% 
-% 
-% end
+function ksIntra = ksTestIntra(fullData,conditions,inds,bps,NNtests)
+% Calculates and return the individual and average ks tests inside a single
+% population
+
+% ks intra pop
+ksIntra = {};
+% example => ksIntra.condition.ind1.bps.NNtests = kstest2;
+for NNtest = 1:numel(NNtests) % which test
+    for bp = 1:numel(bps) % which brain part
+        for condition = 1:numel(conditions) % which condition
+            for ind1 = 1:numel(fieldnames(fullData{condition})) % which individual
+                dn1 = fullData{condition}.(inds{ind1}).(bps{bp}).(NNtests{NNtest}).dn;
+                for ind2 = ind1:numel(inds)
+                    dn2 = fullData{condition}.(inds{ind2}).(bps{bp}).(NNtests{NNtest}).dn;
+                    indsName = sprintf('%svs%s',inds{ind1},inds{ind2});
+                    [h,p,k] = kstest2(dn1,dn2);
+                    ksIntra.(conditions{condition}).(indsName).(bps{bp}).(NNtests{NNtest}).h = h;
+                    ksIntra.(conditions{condition}).(indsName).(bps{bp}).(NNtests{NNtest}).p = p;
+                    ksIntra.(conditions{condition}).(indsName).(bps{bp}).(NNtests{NNtest}).k = k;
+                end
+            end
+        end
+    end
+end
+
+
+
+end
 
 % function ksTestInter(fullData,conditions,inds,bps,NNtests)
 % % Calculates and return the individual and average ks tests inside a single
