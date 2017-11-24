@@ -61,7 +61,7 @@ end
 figTitle = ['Type II (random permutations in I and II) CellDiameter=',num2str(CellDiameter,2),'{\mu}m'];
 figSavePath = [path,name,'Case',num2str(k),'_Analysis05Fig1'];
 
-GrandAll = displaySimuPPQ(r, Grand, G, NumPermut, figTitle, figSavePath);
+GrandCdf = displaySimuPPQ(r, Grand, G, NumPermut, figTitle, figSavePath);
 
 save([path,name,'Case',num2str(k),'_Analysis05NN'],'dn','G','r','Grand','GrandAll');
 
@@ -69,7 +69,7 @@ save([path,name,'Case',num2str(k),'_Analysis05NN'],'dn','G','r','Grand','GrandAl
 fullResults = {};
 fullResults.dn = dn;
 fullResults.G = G;
-fullResults.GrandAll = GrandAll;
+fullResults.GrandCdf = GrandCdf;
 
 end
 
