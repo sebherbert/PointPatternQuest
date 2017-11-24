@@ -15,6 +15,8 @@ function combineAndCompareNN()
 % parts and then 3 tests
 % pop1Files = ;
 
+close all
+
 load('sox2_C_subdiv_L_corrected_nodb_noDl_xyzCASE1_allSample.mat'); % temporary
 
 dataYoung.ind1.all = dataCombined;
@@ -52,23 +54,35 @@ inds = {'ind1','ind2','ind3'}; % names of the individual fishes
 bps = {'all','da','dl'}; % parts of the brain
 NNtests = {'t2vst2','t3vst3','t3vst2'}; % tested cell types
 
-% %% Display inter and intra (1 color each) subplot 3(parts)x3tests
-% conditions = {'Young','Old'}; % Conditions to be tested
-% lineColors = lines(numel(conditions));
-% 
-% displaySubPlots({dataYoung,dataOld},conditions,inds,bps,NNtests,lineColors);
+%% Display inter and intra (1 color each) subplot 3(parts)x3tests
+conditions = {'Young','Old'}; % Conditions to be tested
+lineColors = lines(numel(conditions));
+displaySubPlots({dataYoung,dataOld},conditions,inds,bps,NNtests,lineColors);
 
+conditions = {'Young','Drug'}; % Conditions to be tested
+lineColors = lines(numel(conditions));
+displaySubPlots({dataYoung,dataDrug},conditions,inds,bps,NNtests,lineColors);
 
+conditions = {'Drug','Old'}; % Conditions to be tested
+lineColors = lines(numel(conditions));
+displaySubPlots({dataDrug,dataOld},conditions,inds,bps,NNtests,lineColors);
 %% ks tests
-ks intra population
+% ks intra population
 conditions = {'Young','Old','Drug'}; % Conditions to be tested
 ksIntra = ksTestIntra({dataYoung,dataOld,dataDrug},conditions,inds,bps,NNtests);
-% 
-% % ks inter population
-% conditions = {'Young','Old'}; % Conditions to be tested
-% ksInter = ksTestInter({dataYoung,dataOld},conditions,inds,bps,NNtests);
 
-% Reshape for reading in 3x3 tables cd excel sheets (name rows and lines)
+% ks inter population
+ksInter = {}; % initialize structure
+conditions = {'Young','Old'}; % Conditions to be tested
+ksInter = ksTestInter({dataYoung,dataOld},conditions,inds,bps,NNtests,ksInter);
+
+conditions = {'Young','Drug'}; % Conditions to be tested
+ksInter = ksTestInter({dataYoung,dataDrug},conditions,inds,bps,NNtests,ksInter);
+
+conditions = {'Drug','Old'}; % Conditions to be tested
+ksInter = ksTestInter({dataDrug,dataOld},conditions,inds,bps,NNtests,ksInter);
+
+% Reshape for reading in 3x3 tables cf excel sheets (name rows and lines)
 
 
 
@@ -85,8 +99,8 @@ for NNtest = 1:numel(NNtests) % which test
     for bp = 1:numel(bps) % which brain part
         for condition = 1:numel(conditions) % which condition
             for ind1 = 1:numel(fieldnames(fullData{condition})) % which individual
-                dn1 = fullData{condition}.(inds{ind1}).(bps{bp}).(NNtests{NNtest}).dn;
                 for ind2 = ind1:numel(inds)
+                    dn1 = fullData{condition}.(inds{ind1}).(bps{bp}).(NNtests{NNtest}).dn;
                     dn2 = fullData{condition}.(inds{ind2}).(bps{bp}).(NNtests{NNtest}).dn;
                     indsName = sprintf('%svs%s',inds{ind1},inds{ind2});
                     [h,p,k] = kstest2(dn1,dn2);
@@ -103,27 +117,43 @@ end
 
 end
 
-% function ksTestInter(fullData,conditions,inds,bps,NNtests)
-% % Calculates and return the individual and average ks tests inside a single
-% % population
-% 
-% % ks inter pop
-% ksInter = {};
-% % example => ksInter.condition.ind1vs1ind2.bps.NNtests = kstest2;
-% for NNtest = 1:numel(NNtests) % which test
-%     for bp = 1:numel(bps) % which brain part
-%         for condition = 1:numel(conditions) % which condition
-%             for ind1 = 1:numel(fieldnames(fullData{condition})) % which individual
-% 
-% 
-% end
-% 
-% end
+function ksInter = ksTestInter(fullData,conditions,inds,bps,NNtests,ksInter)
+% Calculates and return the individual and average ks tests inside a single
+% population
+
+% ks inter pop
+% example => ksInter.condition.ind1vs1ind2.bps.NNtests = kstest2;
+for NNtest = 1:numel(NNtests) % which test
+    for bp = 1:numel(bps) % which brain part
+        for condition1 = 1:numel(conditions) % which condition1
+            for condition2 = condition1+1:numel(conditions) % which condition2
+                for ind1 = 1:numel(fieldnames(fullData{condition1})) % which individual1
+                    for ind2 = 1:numel(fieldnames(fullData{condition2})) % which individual2
+                        % Simplify names of the 2 pops of interest
+                        dn1 = fullData{condition1}.(inds{ind1}).(bps{bp}).(NNtests{NNtest}).dn;
+                        dn2 = fullData{condition2}.(inds{ind2}).(bps{bp}).(NNtests{NNtest}).dn;
+                        
+                        % ks test per se
+                        [h,p,k] = kstest2(dn1,dn2);
+                        
+                        % Allocate in structure
+                        condsName = sprintf('%svs%s',conditions{condition1},conditions{condition2});
+                        indsName = sprintf('%svs%s',inds{ind1},inds{ind2});
+                        ksInter.(condsName).(indsName).(bps{bp}).(NNtests{NNtest}).h = h;
+                        ksInter.(condsName).(indsName).(bps{bp}).(NNtests{NNtest}).p = p;
+                        ksInter.(condsName).(indsName).(bps{bp}).(NNtests{NNtest}).k = k;
+                    end
+                end
+            end
+        end
+    end
+end
+
+end
 
 function displaySubPlots(fullData,conditions,inds,bps,NNtests,lineColors)
 % Display inter and intra (1 color each) subplot 3(parts of brain)x3 tests
-close all
-
+% figure('Name',sprintf('Conditions: %s vs %s', conditions{1}, conditions{2}));
 figure
 
 r=0:0.1:14; % bin size for the ecdf for as long as I don't auto
