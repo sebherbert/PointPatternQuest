@@ -153,8 +153,8 @@ end
 
 function displaySubPlots(fullData,conditions,inds,bps,NNtests,lineColors)
 % Display inter and intra (1 color each) subplot 3(parts of brain)x3 tests
-% figure('Name',sprintf('Conditions: %s vs %s', conditions{1}, conditions{2}));
-figure
+figure('Name',sprintf('Conditions: %s vs %s', conditions{1}, conditions{2}));
+% figure
 
 r=0:0.1:14; % bin size for the ecdf for as long as I don't auto
 
