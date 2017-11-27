@@ -49,23 +49,40 @@ dataDrug.ind1.dl = dataCombined;
 dataDrug.ind2.dl = dataCombined;
 dataDrug.ind3.dl = dataCombined;
 
+allData = {dataYoung, dataDrug, dataOld};
+
 %% Initialize the parameters
 inds = {'ind1','ind2','ind3'}; % names of the individual fishes
 bps = {'all','da','dl'}; % parts of the brain
 NNtests = {'t2vst2','t3vst3','t3vst2'}; % tested cell types
+conds = {'Young','Drug','Old'}; % Conditions to be tested => CHECK THE ORDER WITH allDATA structure
 
 %% Display inter and intra (1 color each) subplot 3(parts)x3tests
-conditions = {'Young','Old'}; % Conditions to be tested
-lineColors = lines(numel(conditions));
-displaySubPlots({dataYoung,dataOld},conditions,inds,bps,NNtests,lineColors);
+lineColors = lines(2); % compare populations 2x2
+for condition1 = 1:numel(conds)
+    for condition2 = condition1+1:numel(conds)
+        conditions = {conds{condition1}, conds{condition2}}; % Conditions to be tested
+        displaySubPlots({allData{condition1},allData{condition2}}, conditions,inds,bps,NNtests,lineColors);
+    end
+end
 
-conditions = {'Young','Drug'}; % Conditions to be tested
-lineColors = lines(numel(conditions));
-displaySubPlots({dataYoung,dataDrug},conditions,inds,bps,NNtests,lineColors);
+% conditions = {'Young','Old'}; % Conditions to be tested
+% lineColors = lines(numel(conditions));
+% displaySubPlots({dataYoung,dataOld},conditions,inds,bps,NNtests,lineColors); 
+% 
+% conditions = {'Young','Drug'}; % Conditions to be tested
+% lineColors = lines(numel(conditions));
+% displaySubPlots({dataYoung,dataDrug},conditions,inds,bps,NNtests,lineColors);
+% 
+% conditions = {'Drug','Old'}; % Conditions to be tested
+% lineColors = lines(numel(conditions));
+% displaySubPlots({dataDrug,dataOld},conditions,inds,bps,NNtests,lineColors);
 
-conditions = {'Drug','Old'}; % Conditions to be tested
+conditions = conds; % Pool all the conditions
 lineColors = lines(numel(conditions));
-displaySubPlots({dataDrug,dataOld},conditions,inds,bps,NNtests,lineColors);
+displaySubPlots({dataYoung, dataDrug,dataOld},conditions,inds,bps,NNtests,lineColors);
+
+
 %% ks tests
 % ks intra population
 conditions = {'Young','Old','Drug'}; % Conditions to be tested
@@ -153,11 +170,13 @@ end
 
 function displaySubPlots(fullData,conditions,inds,bps,NNtests,lineColors)
 % Display inter and intra (1 color each) subplot 3(parts of brain)x3 tests
-figure('Name',sprintf('Conditions: %s vs %s', conditions{1}, conditions{2}));
-% figure
+figTitle = sprintf('Conditions: %s vs %s', conditions{1}, conditions{2});
+for nbrConds = 3:numel(conditions)
+    figTitle = sprintf('%s vs %s', figTitle, conditions{nbrConds});
+end
+figure('Name',figTitle);
 
 r=0:0.1:14; % bin size for the ecdf for as long as I don't auto
-
 
 for NNtest = 1:numel(NNtests) % which test
     for bp = 1:numel(bps) % which brain part
