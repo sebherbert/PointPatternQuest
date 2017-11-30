@@ -154,8 +154,8 @@ if exist([path,name,ext])
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %Main Functions
     
-    NNExp = table(S',d123_1',[x,y,z]);
-    NNExp.Properties.VariableNames = {'cellType','nearestNeighbour','pos3D'};
+    NNExp = table((1:length(S))',S',d123_1',[x,y,z]);
+    NNExp.Properties.VariableNames = {'cellID','cellType','nearestNeighbour','pos3D'};
     
     %     % Point pattern analysis Type 2 effect on Type 2 in Type 1+2 (first neighbor)
     %     popSource = 2;

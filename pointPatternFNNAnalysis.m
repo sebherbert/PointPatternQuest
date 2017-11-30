@@ -68,6 +68,8 @@ axis equal
 %% Calculate exp and simulations cdf and their dispersions individualy
 [expCDFs, simuCDFs] = formatCdfs(dnExp, dnSimu, nTarget, PARAMS);
 
+%% Display all the CDFs
+displayCDFs(expCDFs, simuCDFs, PARAMS)
 
 % % 
 % % figure
@@ -133,28 +135,30 @@ for perm = 1:PARAMS.numPermut % for each permutation run
     % Initiate a probability map => prob = 1 for the permutable population and
     % 0 for the rest of the population
     probMap = double(rowPermut);
+    popTargetSimu{perm} = table;
 
     if samePop 
         % Requires adaptation of the popSource at every step + an adaptation at
         % every step of the draw
-        %         for bioCell = 1:nTarget
-        %             if strcmp(PARAMS.effect,'Repulsion')
-        %                 fprintf('ERROR: Spatial effect not ready%s\n', PARAMS.effect);
-        %                 probMap = sum(NNExp.cellType == pops.popPermut,2); % TBChanged !
-        %             elseif strcmp(PARAMS.effect,'Attraction')
-        %                 fprintf('ERROR: Spatial effect not ready%s\n', PARAMS.effect);
-        %                 probMap = sum(NNExp.cellType == pops.popPermut,2); % TBChanged !
-        %             elseif strcmp(PARAMS.effect,'None')
-        %                 popTargetSimu{}
-        %             elseif ~strcmp(PARAMS.effect,'None')
-        %                 fprintf('ERROR: Unknown spatial effect %s\n', PARAMS.effect);
-        %                 break
-        %             end
-        %             popSourceSimu{perm} =
-        %             % Draw one cell
-        %             % Adapt probMap (area around and checkout the drawed cell)
-        %         end
-        %         popTargetSimu{perm} = popSourceSimu{perm}
+        for bioCell = 1:nTarget
+            tempCell = datasample(NNExp,1,'Weights',probMap);
+            probMap(tempCell.cellID) = 0; % be careful at not putting it back at more than 0 by the attraction effect ! 
+            % Same for the permet effect ! 
+            if strcmp(PARAMS.effect,'Repulsion')
+                fprintf('ERROR: Spatial effect not ready%s\n', PARAMS.effect);
+                probMap = sum(NNExp.cellType == pops.popPermut,2); % TBChanged !
+            elseif strcmp(PARAMS.effect,'Attraction')
+                fprintf('ERROR: Spatial effect not ready%s\n', PARAMS.effect);
+                probMap = sum(NNExp.cellType == pops.popPermut,2); % TBChanged !
+            elseif ~strcmp(PARAMS.effect,'None')
+                fprintf('ERROR: Unknown spatial effect %s\n', PARAMS.effect);
+                break
+            end
+            popTargetSimu{perm} = [popTargetSimu{perm},tempCell];
+            %             % Draw one cell
+            %             % Adapt probMap (area around and checkout the drawed cell)
+        end
+        popTargetSimu{perm} = popSourceSimu{perm};
     else
         % Change probMap once and for all
         if strcmp(PARAMS.effect,'Repulsion')
@@ -215,7 +219,41 @@ simuCDFs.fUp1 = mean(simuCDFs.fsUp1,2);
 
 end
 
+function displayCDFs(expCDFs, simuCDFs, PARAMS)
 
+figure
+
+ylabel('Cumulative cell frequency');
+xlabel('distance to nearest neighbor (in cell diameter)');
+
+% Plot the simulation dispersions
+hold on
+plot(simuCDFs.x,simuCDFs.f,'k','linewidth',2);
+plot(simuCDFs.x,simuCDFs.fLo5,'linewidth',1,'color',[0.6 0.6 0.6]);
+plot(simuCDFs.x,simuCDFs.fUp5,'linewidth',1,'color',[0.6 0.6 0.6]);
+plot(simuCDFs.x,simuCDFs.fLo1,'--','linewidth',1,'color',[0.6 0.6 0.6]);
+plot(simuCDFs.x,simuCDFs.fUp1,'--','linewidth',1,'color',[0.6 0.6 0.6]);
+
+% Plot the experimental data
+plot(expCDFs.x,expCDFs.f,'linewidth',2,'Color',lines(1));
+plot(expCDFs.x,expCDFs.fLo5,'linewidth',1,'Color',lines(1));
+plot(expCDFs.x,expCDFs.fUp5,'linewidth',1,'Color',lines(1));
+plot(expCDFs.x,expCDFs.fLo1,'--','linewidth',1,'Color',lines(1));
+plot(expCDFs.x,expCDFs.fUp1,'--','linewidth',1,'Color',lines(1));
+
+text(0.5,0.95,'95% and 99% intervals')
+text(0.5,0.9,[num2str(PARAMS.numPermut),' random perm.'])
+
+% force the axes
+axis([0 14 0 1]);
+
+% if 2*ceil(xScale(min(find(NN>0.9))))<14
+%     axis([0 2*ceil(xScale(min(find(NN>0.9)))) 0 1]);
+% else
+%     axis([0 14 0 1]);
+% end
+
+end
 
 
 
