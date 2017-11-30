@@ -190,9 +190,9 @@ for NNtest = 1:numel(NNtests) % which test
         for condition = 1:numel(conditions) % which condition
             for ind = 1:numel(fieldnames(fullData{condition})) % which individual
                 % lot the experimental cdf
-                dn = fullData{condition}.(inds{ind}).(bps{bp}).(NNtests{NNtest}).dn;
+                dnExp = fullData{condition}.(inds{ind}).(bps{bp}).(NNtests{NNtest}).dn;
                 %                 dn(1,:) = dn(1,:)+numel(hExp); % for tests only
-                [fExp,xExp] = ecdf(dn); % calculate associated experimental cdf
+                [fExp,xExp] = ecdf(dnExp); % calculate associated experimental cdf
                 hExp{numel(hExp)+1} = plot(xExp,fExp,'.-','Color',lineColors(condition,:));
                 % splot of the theoretical cdf => Should use dnSimu in a later version
                 dnSimu = fullData{condition}.(inds{ind}).(bps{bp}).(NNtests{NNtest}).GrandAll.mean;
