@@ -66,40 +66,40 @@ axis equal
 [dnSimu, ~] = randomPerm(NNExp, pops, rowPermut, samePop, CellDiameter, nTarget, PARAMS);
 
 %% Calculate exp and simulations cdf and their dispersions individualy
-% [expCDFs, simuCDFs] = formatCdfs(dnExp, dnSimu, nTarget, PARAMS);
+[expCDFs, simuCDFs] = formatCdfs(dnExp, dnSimu, nTarget, PARAMS);
 
 
-
-figure
-for simu = 1:PARAMS.numPermut % each simulation is treated individually
-    subplot(2,3,simu)
-    hold on
-    [fSimu(:,simu),xSimu(:,simu),fSimuLo5(:,simu),fSimuUp5(:,simu)] = ecdf(dnSimu(:,simu),'alpha',0.05);
-    [~,~,fSimuLo1(:,simu),fSimuUp1(:,simu)] = ecdf(dnSimu(:,simu),'alpha',0.01);
-    plot(xSimu(:,simu),fSimu(:,simu),'.-');
-    plot(xSimu(:,simu),fSimuLo5(:,simu), '.--');
-    plot(xSimu(:,simu),fSimuUp5(:,simu), '.--');
-end
-
+% % 
+% % figure
+% % for simu = 1:PARAMS.numPermut % each simulation is treated individually
+% %     subplot(2,3,simu)
+% %     hold on
+% %     [fSimu(:,simu),xSimu(:,simu),fSimuLo5(:,simu),fSimuUp5(:,simu)] = ecdf(dnSimu(:,simu),'alpha',0.05);
+% %     [~,~,fSimuLo1(:,simu),fSimuUp1(:,simu)] = ecdf(dnSimu(:,simu),'alpha',0.01);
+% %     plot(xSimu(:,simu),fSimu(:,simu),'.-');
+% %     plot(xSimu(:,simu),fSimuLo5(:,simu), '.--');
+% %     plot(xSimu(:,simu),fSimuUp5(:,simu), '.--');
+% % end
 % 
-% subplot(2,3,6)
-% plot(xSimus,fSimus,'.-');
-% hold on
-% plot(xSimus,[fSimusLo5 fSimusUp5], '.--');
-
-
-% Display figure
-figTitle = ['Type II (random permutations in I and II) CellDiameter=',num2str(CellDiameter,2),'{\mu}m'];
-figSavePath = [path,name,'Case',num2str(k),'_Analysis03Fig1'];
-
-GrandCdf = displaySimuPPQ(Grand, GExp, figTitle, figSavePath, PARAMS);
-
-save([path,name,'Case',num2str(k),'_Analysis03NN'],'dnExp','GExp','r','Grand','GrandCdf');
-
-fullResults = {};
-fullResults.dnExp = dnExp;
-fullResults.GExp = GExp;
-fullResults.GrandCdf = GrandCdf;
+% % 
+% % subplot(2,3,6)
+% % plot(xSimus,fSimus,'.-');
+% % hold on
+% % plot(xSimus,[fSimusLo5 fSimusUp5], '.--');
+% 
+% 
+% % Display figure
+% figTitle = ['Type II (random permutations in I and II) CellDiameter=',num2str(CellDiameter,2),'{\mu}m'];
+% figSavePath = [path,name,'Case',num2str(k),'_Analysis03Fig1'];
+% 
+% GrandCdf = displaySimuPPQ(Grand, GExp, figTitle, figSavePath, PARAMS);
+% 
+% save([path,name,'Case',num2str(k),'_Analysis03NN'],'dnExp','GExp','r','Grand','GrandCdf');
+% 
+% fullResults = {};
+% fullResults.dnExp = dnExp;
+% fullResults.GExp = GExp;
+% fullResults.GrandCdf = GrandCdf;
 
 end
 
