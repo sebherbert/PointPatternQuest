@@ -1,4 +1,4 @@
-function fullResults = analysis05PPAFirstNeighbor(path,name,k,x,y,z,S,d123_all,d123_1)
+function fullResults = analysis05PPAFirstNeighbor(path,name,k,x,y,z,S,d123_all,d123_1,PARAMS)
 %Point pattern analysis Type 3 in Type 1+2+3 (first neighbor)
 r=0:0.1:14; % bin size for the ecdf
 
@@ -47,9 +47,9 @@ end
 figTitle = ['Type II (random permutations in I and II) CellDiameter=',num2str(CellDiameter,2),'{\mu}m'];
 figSavePath = [path,name,'Case',num2str(k),'_Analysis05Fig1'];
 
-GrandCdf = displaySimuPPQ(r, Grand, G, NumPermut, figTitle, figSavePath);
+GrandCdf = displaySimuPPQ(Grand, G, figTitle, figSavePath, PARAMS);
 
-save([path,name,'Case',num2str(k),'_Analysis05NN'],'dn','G','r','Grand','GrandCdf');
+% save([path,name,'Case',num2str(k),'_Analysis05NN'],'dn','G','r','Grand','GrandCdf');
 
 fullResults = {};
 fullResults.dn = dn;

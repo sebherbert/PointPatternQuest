@@ -32,13 +32,13 @@ plot(xScale,GrandAll.iqr1,'-','linewidth',1,'color',[0.6 0.6 0.6]);
 plot(xScale,GrandAll.iqr99,'-','linewidth',1,'color',[0.6 0.6 0.6]);
 
 % Plot the experimental data
-plot(xScale,NN,'-r','linewidth',3);
+plot(xScale,G,'-r','linewidth',3);
 text(0.5,0.95,'95% and 99% intervals')
 text(0.5,0.9,[num2str(PARAMS.numPermut),' random perm.'])
 
 % force the axes
-if 2*ceil(xScale(min(find(NN>0.9))))<14
-    axis([0 2*ceil(xScale(min(find(NN>0.9)))) 0 1]);
+if 2*ceil(xScale(min(find(G>0.9))))<14
+    axis([0 2*ceil(xScale(min(find(G>0.9)))) 0 1]);
 else
     axis([0 14 0 1]);
 end

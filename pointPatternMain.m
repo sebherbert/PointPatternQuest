@@ -20,12 +20,12 @@ PARAMS.strength = 2; % Strength of the effect of a cell on its neighbours
 
 % Display Parameters
 PARAMS.maxSizeCDF = 200; % maximum number of points on the cdf
-PARAMS.binSize = 0:0.1:30; % bin size for the ecdf => if force binning of ecdf
+PARAMS.binSize = 0:0.1:14; % bin size for the ecdf => if force binning of ecdf
 
 % File import
-% fileToOpen = uipickfiles('Prompt','Please, select the correct file to analyse (example: sox2_C_subdiv_L_corrected_nodb_noDl.ims)','num',1);
+fileToOpen = uipickfiles('Prompt','Please, select the correct file to analyse (example: sox2_C_subdiv_L_corrected_nodb_noDl.ims)','num',1);
 % for development purposes only
-fileToOpen = {'/media/sherbert/Data/Projects/OG_projects/Project6_ND_distribPattern/static_/preAnalysis_and_ims/sox2_C_subdiv_L_corrected_nodb_noDl_xyzCASE1.mat'};
+% fileToOpen = {'/media/sherbert/Data/Projects/OG_projects/Project6_ND_distribPattern/static_/preAnalysis_and_ims/sox2_C_subdiv_L_corrected_nodb_noDl_xyzCASE1.mat'};
 [path,name,ext] = fileparts(fileToOpen{1});
 path = [path, filesep];
 filename = [name,ext];
@@ -77,7 +77,7 @@ dataCombined.name = name;
 dataCombined.brainPart = brainPart;
 
 
-if exist([path,name,ext])
+if exist([path,name,ext]) % useless in the end... 
     disp(name);
     load([path,name,ext]);
     
@@ -154,49 +154,50 @@ if exist([path,name,ext])
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %Main Functions
     
-    NNExp = table((1:length(S))',S',d123_1',[x,y,z]);
-    NNExp.Properties.VariableNames = {'cellID','cellType','nearestNeighbour','pos3D'};
+    %% These functions are not ready yet but the rest needed to be merged
+    %     NNExp = table((1:length(S))',S',d123_1',[x,y,z]);
+    %     NNExp.Properties.VariableNames = {'cellID','cellType','nearestNeighbour','pos3D'};
+    %
+    %     % Point pattern analysis Type 2 effect on Type 2 in Type 1+2 (first neighbor)
+    %     pops.popSource = 2;
+    %     pops.popTarget = 2;
+    %     pops.popPermut = [1 2];
+    %     tAnalysis = sprintf('t%dvst%d',pops.popSource,pops.popTarget);
+    %     fullPath = [path, name, '_', tAnalysis];
+    %     fprintf('\nRunning analysis %s\n',tAnalysis);
+    %     dataCombined.(tAnalysis) = pointPatternFNNAnalysis(fullPath, NNExp, pops, PARAMS);
+    %
+    %     % Point pattern analysis Type 3 effect on type 3 in Type 1+2+3 (first neighbor)
+    %     pops.popSource = 3;
+    %     pops.popTarget = 3;
+    %     pops.popPermut = [1 2 3];
+    %     tAnalysis = sprintf('t%dvst%d',pops.popSource,pops.popTarget);
+    %     fullPath = [path, name, '_', tAnalysis];
+    %     fprintf('\nRunning analysis %s\n',tAnalysis);
+    %     dataCombined.(tAnalysis) = pointPatternFNNAnalysis(fullPath, NNExp, pops, PARAMS);
+    %
+    %     % Point pattern analysis Type 3 effect on type 2 in Type 1+2 (first neighbor)
+    %     pops.popSource = 3;
+    %     pops.popTarget = 2;
+    %     pops.popPermut = [1 2];
+    %     tAnalysis = sprintf('t%dvst%d',pops.popSource,pops.popTarget);
+    %     fullPath = [path, name, '_', tAnalysis];
+    %     fprintf('\nRunning analysis %s\n',tAnalysis);
+    %     dataCombined.(tAnalysis) = pointPatternFNNAnalysis(fullPath, NNExp, pops, PARAMS);
     
-    % Point pattern analysis Type 2 effect on Type 2 in Type 1+2 (first neighbor)
-    pops.popSource = 2;
-    pops.popTarget = 2;
-    pops.popPermut = [1 2];
-    tAnalysis = sprintf('t%dvst%d',pops.popSource,pops.popTarget);
-    fullPath = [path, name, '_', tAnalysis];
-    fprintf('\nRunning analysis %s\n',tAnalysis);
-    dataCombined.(tAnalysis) = pointPatternFNNAnalysis(fullPath, NNExp, pops, PARAMS);
-    
-    % Point pattern analysis Type 3 effect on type 3 in Type 1+2+3 (first neighbor)
-    pops.popSource = 3;
-    pops.popTarget = 3;
-    pops.popPermut = [1 2 3];
-    tAnalysis = sprintf('t%dvst%d',pops.popSource,pops.popTarget);
-    fullPath = [path, name, '_', tAnalysis];
-    fprintf('\nRunning analysis %s\n',tAnalysis);
-    dataCombined.(tAnalysis) = pointPatternFNNAnalysis(fullPath, NNExp, pops, PARAMS);
-    
-    % Point pattern analysis Type 3 effect on type 2 in Type 1+2 (first neighbor)
-    pops.popSource = 3;
-    pops.popTarget = 2;
-    pops.popPermut = [1 2];
-    tAnalysis = sprintf('t%dvst%d',pops.popSource,pops.popTarget);
-    fullPath = [path, name, '_', tAnalysis];
-    fprintf('\nRunning analysis %s\n',tAnalysis);
-    dataCombined.(tAnalysis) = pointPatternFNNAnalysis(fullPath, NNExp, pops, PARAMS);
-    
-    %     dataCombined.t2vst2 = analysis03PPAFirstNeighbor(path,name,k,x,y,z,S,d12_all,d12_1);
+    dataCombined.t2vst2 = analysis03PPAFirstNeighbor(path,name,k,x,y,z,S,d12_all,d12_1,PARAMS);
     %Point pattern analysis Type 2 in Type 1+2 (first neighbor)
     
-    %     Analysis04PointPatternAnalysisSecondNeighbor(path,filename,k,x,y,z,S,d12_all,d12_1)
+    %         Analysis04PointPatternAnalysisSecondNeighbor(path,filename,k,x,y,z,S,d12_all,d12_1)
     %Point pattern analysis Type 2 in Type 1+2 (second neighbor)
     
-    %     dataCombined.t3vst3 = analysis05PPAFirstNeighbor(path,name,k,x,y,z,S,d123_all,d123_1);
+    dataCombined.t3vst3 = analysis05PPAFirstNeighbor(path,name,k,x,y,z,S,d123_all,d123_1,PARAMS);
     %Point pattern analysis Type 3 in Type 1+2+3 (first neighbor)
     
     %     Analysis06PointPatternAnalysisSecondNeighbor(path,filename,k,x,y,z,S,d123_all,d123_1)
     %Point pattern analysis Type 3 in Type 1+2+3 (second neighbor)
     
-    %     dataCombined.t3vst2 = analysis07PPAFirstNeighbor(path,name,k,x,y,z,S,d123_all,d123_1);
+    dataCombined.t3vst2 = analysis07PPAFirstNeighbor(path,name,k,x,y,z,S,d123_all,d123_1,PARAMS);
     %Point pattern analysis Type 2 distance to 3 in Type 1+2 (first neighbor)
     
 end
