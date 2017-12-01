@@ -19,6 +19,14 @@ close all
 
 load('sox2_C_subdiv_L_corrected_nodb_noDl_xyzCASE1_allSample.mat'); % temporary
 
+% Load young population
+youngFilePath = uipickfiles('Prompt','Select the files of the first ')
+
+dataYoung.ind1.all = ;
+dataYoung.ind1.da = ;
+dataYoung.ind1.dl = ;
+
+
 dataYoung.ind1.all = dataCombined;
 dataYoung.ind2.all = dataCombined;
 dataYoung.ind3.all = dataCombined;
