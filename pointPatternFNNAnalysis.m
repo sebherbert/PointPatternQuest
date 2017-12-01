@@ -3,7 +3,7 @@
 
 % S=S(S==1|S==2)'; for Analysis 3
 
-function full_Results = pointPatternFNNAnalysis(fullPath, NNExp, cCDists, pops, PARAMS)
+function full_Results = pointPatternFNNAnalysis(fullPath, NNExp, pops, PARAMS)
 % Measure and compare the nearest neighbour distance in experimental data
 % and simulations
 %{
@@ -44,17 +44,17 @@ else
 end
 
 % Find nearest neighbour
-dnExp = findNN(popSource3Dpos, popTarget3Dpos, samePop, pops);
+dnExp = findNN(popSource3Dpos, popTarget3Dpos, samePop, pops)';
 
 % Normalize distance by cell Diameter
 dnExp = dnExp/CellDiameter;
 
-% calculate the cdf by hand... consider using ecdf for proper method
-for i = 1:size(r,2)
-    GExp(i) = size(dnExp(dnExp<=r(i)),2)/size(dnExp,2);
-end
+% % calculate the cdf by hand... consider using ecdf for proper method
+% for i = 1:size(r,2)
+%     GExp(i) = size(dnExp(dnExp<=r(i)),2)/size(dnExp,2);
+% end
 
-% Display randomly selected cells => temporary
+% Display experimental populations cells => temporary
 figure
 hold on
 plot3(popPermut3Dpos(:,1),popPermut3Dpos(:,2),popPermut3Dpos(:,3),'o');
@@ -132,6 +132,9 @@ function [dnSimu, Grand] = randomPerm(NNExp, pops, rowPermut, samePop, CellDiame
 dnSimu = zeros(nTarget,PARAMS.numPermut);
 
 for perm = 1:PARAMS.numPermut % for each permutation run
+    if mod(perm,100) == 0
+        fprintf('Running permutation %d\n',perm);
+    end
     % Initiate a probability map => prob = 1 for the permutable population and
     % 0 for the rest of the population
     probMap = double(rowPermut);
@@ -154,11 +157,11 @@ for perm = 1:PARAMS.numPermut % for each permutation run
                 fprintf('ERROR: Unknown spatial effect %s\n', PARAMS.effect);
                 break
             end
-            popTargetSimu{perm} = [popTargetSimu{perm},tempCell];
+            popTargetSimu{perm} = [popTargetSimu{perm};tempCell];
             %             % Draw one cell
             %             % Adapt probMap (area around and checkout the drawed cell)
         end
-        popTargetSimu{perm} = popSourceSimu{perm};
+        popSourceSimu{perm} = popTargetSimu{perm};
     else
         % Change probMap once and for all
         if strcmp(PARAMS.effect,'Repulsion')
@@ -205,6 +208,10 @@ simuCDFs.fsUp5 = zeros(nTarget+1,PARAMS.numPermut);
 simuCDFs.fsLo1 = zeros(nTarget+1,PARAMS.numPermut);
 simuCDFs.fsUp1 = zeros(nTarget+1,PARAMS.numPermut);
 for simu = 1:PARAMS.numPermut % each simulation is treated individually
+    % ERROR: Sometimes, the nearest neighbour are symetrical and return the
+    % same distance => are counted as one step in the cdf of twice the size
+    % which messes up the number of positions => error in table and error in
+    % averaging
     [simuCDFs.fs(:,simu),simuCDFs.xs(:,simu),simuCDFs.fsLo5(:,simu),simuCDFs.fsUp5(:,simu)] = ecdf(dnSimu(:,simu),'alpha',0.05);
     [~,~,simuCDFs.fsLo1(:,simu),simuCDFs.fsUp1(:,simu)] = ecdf(dnSimu(:,simu),'alpha',0.01);
 end
