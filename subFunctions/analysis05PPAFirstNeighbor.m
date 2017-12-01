@@ -28,30 +28,16 @@ end
 
 
 % Effectuate the simulation of the random permutations
-ii=0;
-D=[];
 NumPermut=1000;
 d1min=0;%in um
 for j=1:NumPermut % for each permutation run
     S=S(randperm(length(S)));
-    if d1min>0
-        [dtempSimu d1 d2]=NNanalysis(x(S==popTarget),y(S==popTarget),z(S==popTarget));
-        while min(d1)<d1min
-            S=S(randperm(length(S)));
-            [dtempSimu d1 d2]=NNanalysis(x(S==popTarget),y(S==popTarget),z(S==popTarget));
-        end
-        clear dtempSimu
-    end
-    %     clear dtemp
     index=find(S==popTarget);
-    
     for i=1:numel(index)
         dtempSimu=sort(d123_all(index(i),index));
         dnSimu(i)=dtempSimu(2);
     end
     dnSimu=dnSimu/CellDiameter;
-    %             r=0:0.1:10;
-    %             [n(j,:),xout] = hist(dn,xin);
     for i=1:size(r,2)
         Grand(j,i)=size(dnSimu(dnSimu<=r(i)),2)/size(dnSimu,2);
     end
@@ -63,8 +49,7 @@ figSavePath = [path,name,'Case',num2str(k),'_Analysis05Fig1'];
 
 GrandCdf = displaySimuPPQ(r, Grand, G, NumPermut, figTitle, figSavePath);
 
-save([path,name,'Case',num2str(k),'_Analysis05NN'],'dn','G','r','Grand','GrandAll');
-
+save([path,name,'Case',num2str(k),'_Analysis05NN'],'dn','G','r','Grand','GrandCdf');
 
 fullResults = {};
 fullResults.dn = dn;
