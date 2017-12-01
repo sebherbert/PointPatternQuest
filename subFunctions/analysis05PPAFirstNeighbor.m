@@ -63,7 +63,7 @@ figSavePath = [path,name,'Case',num2str(k),'_Analysis05Fig1'];
 
 GrandCdf = displaySimuPPQ(r, Grand, G, NumPermut, figTitle, figSavePath);
 
-save([path,name,'Case',num2str(k),'_Analysis05NN'],'dn','G','r','Grand','GrandAll');
+save([path,name,'Case',num2str(k),'_Analysis05NN'],'dn','G','r','Grand','GrandCdf');
 
 
 fullResults = {};
