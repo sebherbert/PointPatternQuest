@@ -11,66 +11,96 @@ function combineAndCompareNN()
 
 %% Load up the samples per populations
 % 3 independent loads or automated parsing?
-% => Objective is to create 3 structures with each 3 samples, then 3 brain
+% => Objective is to create 3 structures with each N samples, then 3 brain
 % parts and then 3 tests
-% pop1Files = ;
 
 close all
 
-load('sox2_C_subdiv_L_corrected_nodb_noDl_xyzCASE1_allSample.mat'); % temporary
-
-% Load young population
-youngFilePath = uipickfiles('Prompt','Select the files of the first ')
-
-dataYoung.ind1.all = ;
-dataYoung.ind1.da = ;
-dataYoung.ind1.dl = ;
-
-
-dataYoung.ind1.all = dataCombined;
-dataYoung.ind2.all = dataCombined;
-dataYoung.ind3.all = dataCombined;
-dataOld.ind1.all = dataCombined;
-dataOld.ind2.all = dataCombined;
-dataOld.ind3.all = dataCombined;
-dataDrug.ind1.all = dataCombined;
-dataDrug.ind2.all = dataCombined;
-dataDrug.ind3.all = dataCombined;
-
-dataYoung.ind1.da = dataCombined;
-dataYoung.ind2.da = dataCombined;
-dataYoung.ind3.da = dataCombined;
-dataOld.ind1.da = dataCombined;
-dataOld.ind2.da = dataCombined;
-dataOld.ind3.da = dataCombined;
-dataDrug.ind1.da = dataCombined;
-dataDrug.ind2.da = dataCombined;
-dataDrug.ind3.da = dataCombined;
-
-dataYoung.ind1.dl = dataCombined;
-dataYoung.ind2.dl = dataCombined;
-dataYoung.ind3.dl = dataCombined;
-dataOld.ind1.dl = dataCombined;
-dataOld.ind2.dl = dataCombined;
-dataOld.ind3.dl = dataCombined;
-dataDrug.ind1.dl = dataCombined;
-dataDrug.ind2.dl = dataCombined;
-dataDrug.ind3.dl = dataCombined;
-
-allData = {dataYoung, dataDrug, dataOld};
+PARAMS = {};
 
 %% Initialize the parameters
 inds = {'ind1','ind2','ind3'}; % names of the individual fishes
-bps = {'all','da','dl'}; % parts of the brain
+bps = {'allSample','dm'}; % parts of the brain (not da for the moment since not tested in a brain)
 NNtests = {'t2vst2','t3vst3','t3vst2'}; % tested cell types
-conds = {'Young','Drug','Old'}; % Conditions to be tested => CHECK THE ORDER WITH allDATA structure
+conds = {'Young','Drug','Old'}; % Conditions to be tested => CHECK THE ORDER WITH allDATA STRUCTURE
+
+temp = load('/media/sherbert/Data/Projects/OG_projects/Project6_ND_distribPattern/dataFolder/loader.mat'); % temporary
+
+% tempFold = uipickfiles('Prompt','Please, select the output folder');
+tempFold = {'/media/sherbert/Data/Projects/OG_projects/Project6_ND_distribPattern/dataFolder/Output'};
+PARAMS.outputFold = [tempFold{1} filesep];
+
+
+% Load populations
+allData = {};
+for condition = 1:numel(conds) % for each condition
+    %     multiFoldPath = uipickfiles('Prompt',sprintf('Select the folders of
+    %     individual in the %s population',conds{condition})); % temporarilly
+    %     killed
+    multiFoldPath = temp.foldPaths{condition};
+    for folderOI = 1:length(multiFoldPath) % for each selected folder
+        folderInfo = dir(multiFoldPath{folderOI}); % find objects into the folder
+        for obj = 1:length(folderInfo)
+            if ~folderInfo(obj).isdir % if object is not a folder
+                for bp = 1:numel(bps)
+                    if contains(folderInfo(obj).name,sprintf('_%s',bps{bp}))
+                        fprintf('Found file: %s\n',folderInfo(obj).name);
+                        dataTemp = load([folderInfo(obj).folder filesep folderInfo(obj).name]);
+                        tempField = fieldnames(dataTemp);
+                        if numel(tempField) ~= 1
+                            fprintf('Found file has an abnormal number of fields');
+                        else
+                            allData{condition}.(sprintf('ind%d',folderOI)).(bps{bp}) = dataTemp.(tempField{1});
+                        end
+                        clear dataTemp
+                    end
+                end
+            end
+        end
+    end
+end
+
+
+% % => Old test version
+% dataYoung.ind1.all = dataCombined;
+% dataYoung.ind2.all = dataCombined;
+% dataYoung.ind3.all = dataCombined;
+% dataOld.ind1.all = dataCombined;
+% dataOld.ind2.all = dataCombined;
+% dataOld.ind3.all = dataCombined;
+% dataDrug.ind1.all = dataCombined;
+% dataDrug.ind2.all = dataCombined;
+% dataDrug.ind3.all = dataCombined;
+% 
+% dataYoung.ind1.da = dataCombined;
+% dataYoung.ind2.da = dataCombined;
+% dataYoung.ind3.da = dataCombined;
+% dataOld.ind1.da = dataCombined;
+% dataOld.ind2.da = dataCombined;
+% dataOld.ind3.da = dataCombined;
+% dataDrug.ind1.da = dataCombined;
+% dataDrug.ind2.da = dataCombined;
+% dataDrug.ind3.da = dataCombined;
+% 
+% dataYoung.ind1.dl = dataCombined;
+% dataYoung.ind2.dl = dataCombined;
+% dataYoung.ind3.dl = dataCombined;
+% dataOld.ind1.dl = dataCombined;
+% dataOld.ind2.dl = dataCombined;
+% dataOld.ind3.dl = dataCombined;
+% dataDrug.ind1.dl = dataCombined;
+% dataDrug.ind2.dl = dataCombined;
+% dataDrug.ind3.dl = dataCombined;
+% 
+% allData = {dataYoung, dataDrug, dataOld};
+
 
 %% Display inter and intra (1 color each) subplot 3(parts)x3tests
 lineColors = lines(2); % compare populations 2x2
 for condition1 = 1:numel(conds)
     for condition2 = condition1+1:numel(conds)
         conditions = {conds{condition1}, conds{condition2}}; % Conditions to be tested
-        displaySubPlots({allData{condition1},allData{condition2}}, conditions,inds,bps,NNtests,lineColors);
+        displaySubPlots({allData{condition1},allData{condition2}}, conditions, inds, bps, NNtests, lineColors, PARAMS);
     end
 end
 
@@ -86,30 +116,37 @@ end
 % lineColors = lines(numel(conditions));
 % displaySubPlots({dataDrug,dataOld},conditions,inds,bps,NNtests,lineColors);
 
-conditions = conds; % Pool all the conditions
-lineColors = lines(numel(conditions));
-displaySubPlots({dataYoung, dataDrug,dataOld},conditions,inds,bps,NNtests,lineColors);
+% Pool all the conditions
+lineColors = lines(numel(conds));
+displaySubPlots({allData{1},allData{2},allData{3}},conds,inds,bps,NNtests,lineColors,PARAMS);
 
 
 %% ks tests
 % ks intra population
-conditions = {'Young','Old','Drug'}; % Conditions to be tested
-ksIntra = ksTestIntra({dataYoung,dataOld,dataDrug},conditions,inds,bps,NNtests);
+% For each individual condition to be tested
+ksIntra = ksTestIntra({allData{1},allData{2},allData{3}},conds,inds,bps,NNtests);
 
-% ks inter population
+% ks inter population => Automatize
 ksInter = {}; % initialize structure
-conditions = {'Young','Old'}; % Conditions to be tested
-ksInter = ksTestInter({dataYoung,dataOld},conditions,inds,bps,NNtests,ksInter);
-
-conditions = {'Young','Drug'}; % Conditions to be tested
-ksInter = ksTestInter({dataYoung,dataDrug},conditions,inds,bps,NNtests,ksInter);
-
-conditions = {'Drug','Old'}; % Conditions to be tested
-ksInter = ksTestInter({dataDrug,dataOld},conditions,inds,bps,NNtests,ksInter);
+for condition1 = 1:numel(conds)
+    for condition2 = condition1+1:numel(conds)
+        conditions = {conds{condition1}, conds{condition2}}; % Conditions to be tested
+        %         displaySubPlots({allData{condition1},allData{condition2}}, conditions,inds,bps,NNtests,lineColors);
+        ksInter = ksTestInter({allData{condition1},allData{condition2}},conditions,inds,bps,NNtests,ksInter);
+    end
+end
+% conditions = {'Young','Old'}; % Conditions to be tested
+% ksInter = ksTestInter({dataYoung,dataOld},conditions,inds,bps,NNtests,ksInter);
+% 
+% conditions = {'Young','Drug'}; % Conditions to be tested
+% ksInter = ksTestInter({dataYoung,dataDrug},conditions,inds,bps,NNtests,ksInter);
+% 
+% conditions = {'Drug','Old'}; % Conditions to be tested
+% ksInter = ksTestInter({dataDrug,dataOld},conditions,inds,bps,NNtests,ksInter);
 
 % Reshape for reading in 3x3 tables cf excel sheets (name rows and lines)
 
-
+% save([PARAMS.outputFold 'ksResults'],'ksInter','ksIntra');
 
 end
 
@@ -176,11 +213,14 @@ end
 
 end
 
-function displaySubPlots(fullData,conditions,inds,bps,NNtests,lineColors)
+function displaySubPlots(fullData,conditions,inds,bps,NNtests,lineColors,PARAMS)
 % Display inter and intra (1 color each) subplot 3(parts of brain)x3 tests
-figTitle = sprintf('Conditions: %s vs %s', conditions{1}, conditions{2});
-for nbrConds = 3:numel(conditions)
+figTitle = sprintf('Conditions: %s', conditions{1});
+figSaveName = sprintf('%s', conditions{1});
+
+for nbrConds = 2:numel(conditions)
     figTitle = sprintf('%s vs %s', figTitle, conditions{nbrConds});
+    figSaveName = sprintf('%svs%s', figSaveName, conditions{nbrConds});
 end
 figure('Name',figTitle);
 
@@ -203,7 +243,7 @@ for NNtest = 1:numel(NNtests) % which test
                 [fExp,xExp] = ecdf(dnExp); % calculate associated experimental cdf
                 hExp{numel(hExp)+1} = plot(xExp,fExp,'.-','Color',lineColors(condition,:));
                 % splot of the theoretical cdf => Should use dnSimu in a later version
-                dnSimu = fullData{condition}.(inds{ind}).(bps{bp}).(NNtests{NNtest}).GrandAll.mean;
+                dnSimu = fullData{condition}.(inds{ind}).(bps{bp}).(NNtests{NNtest}).GrandCdf.mean;
                 %                 dnSimu(1,:) = dnSimu(1,:)+numel(hSimu); % for tests only
                 %                 [fSimu,xSimu] = ecdf(dnSimu); % calculate associated
                 %                 experimental cdf => for when dnSimu = real
@@ -218,7 +258,9 @@ for NNtest = 1:numel(NNtests) % which test
         legend boxoff;
     end
 end
-            
+      
+% saveas(gcf,[PARAMS.outputFold figSaveName]);
+% saveas(gcf,[PARAMS.outputFold figSaveName],'png'); => Need Full Screen
         
 % [f,x] = ecdf(dn);
 % hold on
