@@ -57,7 +57,7 @@ for condition = 1:numel(conds) % for each condition
             end
         end
         [~,indName,~] = fileparts(multiFoldPath{folderOI});
-        individualNames{condition}.(sprintf('ind%d',folderOI)).name = indName;
+        individualNames.(conds{condition}).(sprintf('ind%d',folderOI)) = indName;
         clear indName;
     end
 end
