@@ -135,18 +135,10 @@ for condition1 = 1:numel(conds)
         ksInter = ksTestInter({allData{condition1},allData{condition2}},conditions,inds,bps,NNtests,ksInter);
     end
 end
-% conditions = {'Young','Old'}; % Conditions to be tested
-% ksInter = ksTestInter({dataYoung,dataOld},conditions,inds,bps,NNtests,ksInter);
-% 
-% conditions = {'Young','Drug'}; % Conditions to be tested
-% ksInter = ksTestInter({dataYoung,dataDrug},conditions,inds,bps,NNtests,ksInter);
-% 
-% conditions = {'Drug','Old'}; % Conditions to be tested
-% ksInter = ksTestInter({dataDrug,dataOld},conditions,inds,bps,NNtests,ksInter);
 
 % Reshape for reading in 3x3 tables cf excel sheets (name rows and lines)
 
-% save([PARAMS.outputFold 'ksResults'],'ksInter','ksIntra');
+save([PARAMS.outputFold 'ksResults'],'ksInter','ksIntra');
 
 end
 
@@ -259,7 +251,7 @@ for NNtest = 1:numel(NNtests) % which test
     end
 end
       
-% saveas(gcf,[PARAMS.outputFold figSaveName]);
+saveas(gcf,[PARAMS.outputFold figSaveName]);
 % saveas(gcf,[PARAMS.outputFold figSaveName],'png'); => Need Full Screen
         
 % [f,x] = ecdf(dn);
