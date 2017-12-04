@@ -56,8 +56,15 @@ for condition = 1:numel(conds) % for each condition
                 end
             end
         end
+        [~,indName,~] = fileparts(multiFoldPath{folderOI});
+        individualNames{condition}.(sprintf('ind%d',folderOI)).name = indName;
+        clear indName;
     end
 end
+
+%% Save connection of individual names and ind$N
+save([PARAMS.outputFold 'individualNames'],'individualNames');
+
 
 %% Display inter and intra (1 color each) subplot 3(parts)x3tests
 lineColors = lines(2); % compare populations 2x2
@@ -67,18 +74,6 @@ for condition1 = 1:numel(conds)
         displaySubPlots({allData{condition1},allData{condition2}}, conditions, bps, NNtests, lineColors, PARAMS);
     end
 end
-
-% conditions = {'Young','Old'}; % Conditions to be tested
-% lineColors = lines(numel(conditions));
-% displaySubPlots({dataYoung,dataOld},conditions,inds,bps,NNtests,lineColors); 
-% 
-% conditions = {'Young','Drug'}; % Conditions to be tested
-% lineColors = lines(numel(conditions));
-% displaySubPlots({dataYoung,dataDrug},conditions,inds,bps,NNtests,lineColors);
-% 
-% conditions = {'Drug','Old'}; % Conditions to be tested
-% lineColors = lines(numel(conditions));
-% displaySubPlots({dataDrug,dataOld},conditions,inds,bps,NNtests,lineColors);
 
 % Pool all the conditions
 lineColors = lines(numel(conds));
