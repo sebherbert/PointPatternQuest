@@ -10,31 +10,31 @@ function combineAndCompareNN()
 % likely not going to be used.
 
 %% Load up the samples per populations
-% 3 independent loads or automated parsing?
-% => Objective is to create 3 structures with each N samples, then 3 brain
-% parts and then 3 tests
+% The script can handle a different number of individuals and incomplete
+% conditions per individual.
 
 close all
 
 PARAMS = {};
 
 %% Initialize the parameters
-inds = {'ind1','ind2','ind3'}; % names of the individual fishes
-bps = {'allSample','dm'}; % parts of the brain (not da for the moment since not tested in a brain)
+% inds = {'ind1','ind2','ind3'}; % names of the individual fishes => Number
+% of individual per condition can change => Not required anymore
+bps = {'allSample','dm','da'}; % parts of the brain (not da for the moment since not tested in a brain)
 NNtests = {'t2vst2','t3vst3','t3vst2'}; % tested cell types
 conds = {'Young','Drug','Old'}; % Conditions to be tested => CHECK THE ORDER WITH allDATA STRUCTURE
 
 % temp = load('/media/sherbert/Data/Projects/OG_projects/Project6_ND_distribPattern/dataFolder/loader.mat'); % temporary
 
-tempFold = uipickfiles('Prompt','Please, select the output folder');
-% tempFold = {'/media/sherbert/Data/Projects/OG_projects/Project6_ND_distribPattern/dataFolder/Output'};
+% tempFold = uipickfiles('Prompt','Please, select the output folder');
+tempFold = {'/media/sherbert/Data/Projects/OG_projects/Project6_ND_distribPattern/dataFolder/Output'};
 PARAMS.outputFold = [tempFold{1} filesep];
 
 
 % Load populations
 allData = {};
 for condition = 1:numel(conds) % for each condition
-    multiFoldPath = uipickfiles('Prompt',...
+    multiFoldPath = uipickfiles('Prompt',... % temporarilly killed
         sprintf('Select the folders of individual in the %s population',conds{condition}));
     %     multiFoldPath = temp.foldPaths{condition};
     for folderOI = 1:length(multiFoldPath) % for each selected folder
@@ -64,7 +64,7 @@ lineColors = lines(2); % compare populations 2x2
 for condition1 = 1:numel(conds)
     for condition2 = condition1+1:numel(conds)
         conditions = {conds{condition1}, conds{condition2}}; % Conditions to be tested
-        displaySubPlots({allData{condition1},allData{condition2}}, conditions, inds, bps, NNtests, lineColors, PARAMS);
+        displaySubPlots({allData{condition1},allData{condition2}}, conditions, bps, NNtests, lineColors, PARAMS);
     end
 end
 
@@ -82,21 +82,20 @@ end
 
 % Pool all the conditions
 lineColors = lines(numel(conds));
-displaySubPlots({allData{1},allData{2},allData{3}},conds,inds,bps,NNtests,lineColors,PARAMS);
+displaySubPlots({allData{1},allData{2},allData{3}},conds,bps,NNtests,lineColors,PARAMS);
 
 
 %% ks tests
 % ks intra population
 % For each individual condition to be tested
-ksIntra = ksTestIntra({allData{1},allData{2},allData{3}},conds,inds,bps,NNtests);
+ksIntra = ksTestIntra({allData{1},allData{2},allData{3}},conds,bps,NNtests);
 
 % ks inter population => Automatize
 ksInter = {}; % initialize structure
 for condition1 = 1:numel(conds)
     for condition2 = condition1+1:numel(conds)
         conditions = {conds{condition1}, conds{condition2}}; % Conditions to be tested
-        %         displaySubPlots({allData{condition1},allData{condition2}}, conditions,inds,bps,NNtests,lineColors);
-        ksInter = ksTestInter({allData{condition1},allData{condition2}},conditions,inds,bps,NNtests,ksInter);
+        ksInter = ksTestInter({allData{condition1},allData{condition2}},conditions,bps,NNtests,ksInter);
     end
 end
 
@@ -106,7 +105,7 @@ save([PARAMS.outputFold 'ksResults'],'ksInter','ksIntra');
 
 end
 
-function ksIntra = ksTestIntra(fullData,conditions,inds,bps,NNtests)
+function ksIntra = ksTestIntra(fullData,conditions,bps,NNtests)
 % Calculates and return the individual and average ks tests inside a single
 % population
 
@@ -116,12 +115,28 @@ ksIntra = {};
 for NNtest = 1:numel(NNtests) % which test
     for bp = 1:numel(bps) % which brain part
         for condition = 1:numel(conditions) % which condition
-            for ind1 = 1:numel(fieldnames(fullData{condition})) % which individual
-                for ind2 = ind1:numel(inds)
-                    dn1 = fullData{condition}.(inds{ind1}).(bps{bp}).(NNtests{NNtest}).dn;
-                    dn2 = fullData{condition}.(inds{ind2}).(bps{bp}).(NNtests{NNtest}).dn;
-                    indsName = sprintf('%svs%s',inds{ind1},inds{ind2});
+            % list every individual in condition
+            indNames = fieldnames(fullData{condition});
+            for ind1 = 1:numel(indNames) % which individual 1 
+                ind1Name = indNames{ind1};
+                for ind2 = ind1:numel(indNames) % which individual 2
+                    
+                    ind2Name = indNames{ind2};
+                    
+                    % if this brain part is not treated in any of these individual then
+                    % skip it
+                    if ~isfield( fullData{condition}.(ind1Name) , (bps{bp}))
+                        continue
+                    elseif ~isfield( fullData{condition}.(ind2Name) , (bps{bp}))
+                        continue
+                    end
+                    
+                    dn1 = fullData{condition}.(ind1Name).(bps{bp}).(NNtests{NNtest}).dn;
+                    dn2 = fullData{condition}.(ind2Name).(bps{bp}).(NNtests{NNtest}).dn;
+                    indsName = sprintf('%svs%s',ind1Name,ind2Name);
+                    
                     [h,p,k] = kstest2(dn1,dn2);
+                    
                     ksIntra.(conditions{condition}).(indsName).(bps{bp}).(NNtests{NNtest}).h = h;
                     ksIntra.(conditions{condition}).(indsName).(bps{bp}).(NNtests{NNtest}).p = p;
                     ksIntra.(conditions{condition}).(indsName).(bps{bp}).(NNtests{NNtest}).k = k;
@@ -131,11 +146,9 @@ for NNtest = 1:numel(NNtests) % which test
     end
 end
 
-
-
 end
 
-function ksInter = ksTestInter(fullData,conditions,inds,bps,NNtests,ksInter)
+function ksInter = ksTestInter(fullData,conditions,bps,NNtests,ksInter)
 % Calculates and return the individual and average ks tests inside a single
 % population
 
@@ -144,19 +157,38 @@ function ksInter = ksTestInter(fullData,conditions,inds,bps,NNtests,ksInter)
 for NNtest = 1:numel(NNtests) % which test
     for bp = 1:numel(bps) % which brain part
         for condition1 = 1:numel(conditions) % which condition1
+
+            % list every individual in condition 1
+            indNamesCond1 = fieldnames(fullData{condition1});
+
             for condition2 = condition1+1:numel(conditions) % which condition2
+            
+                % list every individual in condition 2
+                indNamesCond2 = fieldnames(fullData{condition2});
+                
                 for ind1 = 1:numel(fieldnames(fullData{condition1})) % which individual1
+                    ind1Name = indNamesCond1{ind1};
                     for ind2 = 1:numel(fieldnames(fullData{condition2})) % which individual2
+                        ind2Name = indNamesCond2{ind2};
+                        
+                        % if this brain part is not treated in any of these individual then
+                        % skip it
+                        if ~isfield( fullData{condition1}.(ind1Name) , (bps{bp}))
+                            continue
+                        elseif ~isfield( fullData{condition2}.(ind2Name) , (bps{bp}))
+                            continue
+                        end
+                        
                         % Simplify names of the 2 pops of interest
-                        dn1 = fullData{condition1}.(inds{ind1}).(bps{bp}).(NNtests{NNtest}).dn;
-                        dn2 = fullData{condition2}.(inds{ind2}).(bps{bp}).(NNtests{NNtest}).dn;
+                        dn1 = fullData{condition1}.(ind1Name).(bps{bp}).(NNtests{NNtest}).dn;
+                        dn2 = fullData{condition2}.(ind2Name).(bps{bp}).(NNtests{NNtest}).dn;
                         
                         % ks test per se
                         [h,p,k] = kstest2(dn1,dn2);
                         
                         % Allocate in structure
                         condsName = sprintf('%svs%s',conditions{condition1},conditions{condition2});
-                        indsName = sprintf('%svs%s',inds{ind1},inds{ind2});
+                        indsName = sprintf('%svs%s',ind1Name,ind2Name);
                         ksInter.(condsName).(indsName).(bps{bp}).(NNtests{NNtest}).h = h;
                         ksInter.(condsName).(indsName).(bps{bp}).(NNtests{NNtest}).p = p;
                         ksInter.(condsName).(indsName).(bps{bp}).(NNtests{NNtest}).k = k;
@@ -169,7 +201,7 @@ end
 
 end
 
-function displaySubPlots(fullData,conditions,inds,bps,NNtests,lineColors,PARAMS)
+function displaySubPlots(fullData,conditions,bps,NNtests,lineColors,PARAMS)
 % Display inter and intra (1 color each) subplot 3(parts of brain)x3 tests
 figTitle = sprintf('Conditions: %s', conditions{1});
 figSaveName = sprintf('%s', conditions{1});
@@ -192,14 +224,30 @@ for NNtest = 1:numel(NNtests) % which test
         legs = [];
         title(sprintf('NN %s in %s',NNtests{NNtest},bps{bp}));
         for condition = 1:numel(conditions) % which condition
-            for ind = 1:numel(fieldnames(fullData{condition})) % which individual
-                % lot the experimental cdf
-                dnExp = fullData{condition}.(inds{ind}).(bps{bp}).(NNtests{NNtest}).dn;
+            % list every individual
+            indNames = fieldnames(fullData{condition});
+            for ind = 1:numel(indNames) % which individual
+                indName = indNames{ind};
+                
+                % if this brain part is not treated in this particular individual then
+                % skip it
+                if ~isfield( fullData{condition}.(indName) , (bps{bp}))
+                    continue
+                end
+                
+                % If this statistical test is not treated in this particular individual
+                % then skip it
+                if ~isfield( fullData{condition}.(indName).(bps{bp}), NNtests{NNtest} )
+                    continue
+                end
+                
+                % plot the experimental cdf
+                dnExp = fullData{condition}.(indName).(bps{bp}).(NNtests{NNtest}).dn;
                 %                 dn(1,:) = dn(1,:)+numel(hExp); % for tests only
                 [fExp,xExp] = ecdf(dnExp); % calculate associated experimental cdf
                 hExp{numel(hExp)+1} = plot(xExp,fExp,'.-','Color',lineColors(condition,:));
                 % splot of the theoretical cdf => Should use dnSimu in a later version
-                dnSimu = fullData{condition}.(inds{ind}).(bps{bp}).(NNtests{NNtest}).GrandCdf.mean;
+                dnSimu = fullData{condition}.(indName).(bps{bp}).(NNtests{NNtest}).GrandCdf.mean;
                 %                 dnSimu(1,:) = dnSimu(1,:)+numel(hSimu); % for tests only
                 %                 [fSimu,xSimu] = ecdf(dnSimu); % calculate associated
                 %                 experimental cdf => for when dnSimu = real
