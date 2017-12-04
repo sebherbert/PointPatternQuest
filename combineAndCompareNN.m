@@ -16,13 +16,14 @@ function combineAndCompareNN()
 close all
 
 PARAMS = {};
+PARAMS.axes = [0 10 0 1];
 
 %% Initialize the parameters
 % inds = {'ind1','ind2','ind3'}; % names of the individual fishes => Number
 % of individual per condition can change => Not required anymore
 bps = {'allSample','dm','da'}; % parts of the brain (not da for the moment since not tested in a brain)
 NNtests = {'t2vst2','t3vst3','t3vst2'}; % tested cell types
-conds = {'Young','Drug','Old'}; % Conditions to be tested => CHECK THE ORDER WITH allDATA STRUCTURE
+conds = {'Young','Old','Drug'}; % Conditions to be tested => CHECK THE ORDER WITH allDATA STRUCTURE
 
 % temp = load('/media/sherbert/Data/Projects/OG_projects/Project6_ND_distribPattern/dataFolder/loader.mat'); % temporary
 
@@ -248,7 +249,7 @@ for NNtest = 1:numel(NNtests) % which test
                 %                 experimental cdf => for when dnSimu = real
                 fSimu = dnSimu;
                 xSimu = r;
-                hSimu{numel(hSimu)+1} = plot(xSimu,fSimu,'.--','Color',lineColors(condition,:));
+                hSimu{numel(hSimu)+1} = plot(xSimu,fSimu,'--','Color',[lineColors(condition,:) 0.5]);
             end
             clegs = [clegs, hExp{numel(hExp)}, hSimu{numel(hSimu)}];
             legs = [legs, sprintf('%s (N=%d)',conditions{condition},numel(fieldnames(fullData{condition}))),...
@@ -256,6 +257,8 @@ for NNtest = 1:numel(NNtests) % which test
         end
         legend(clegs,legs,'Location','southeast');
         legend boxoff;
+        axis(PARAMS.axes);
+        xlabel('CDF of nearest neighbour (in cell diameter)');
     end
 end
       
