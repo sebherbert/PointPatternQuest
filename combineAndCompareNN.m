@@ -27,8 +27,8 @@ conds = {'Young','Old','Drug'}; % Conditions to be tested => CHECK THE ORDER WIT
 
 % temp = load('/media/sherbert/Data/Projects/OG_projects/Project6_ND_distribPattern/dataFolder/loader.mat'); % temporary
 
-% tempFold = uipickfiles('Prompt','Please, select the output folder');
-tempFold = {'/media/sherbert/Data/Projects/OG_projects/Project6_ND_distribPattern/dataFolder/Output'};
+tempFold = uipickfiles('Prompt','Please, select the output folder');
+% tempFold = {'/media/sherbert/Data/Projects/OG_projects/Project6_ND_distribPattern/dataFolder/Output'};
 PARAMS.outputFold = [tempFold{1} filesep];
 
 
@@ -222,6 +222,7 @@ for NNtest = 1:numel(NNtests) % which test
         for condition = 1:numel(conditions) % which condition
             % list every individual
             indNames = fieldnames(fullData{condition});
+            Nind = 0; % total pop in the current test
             for ind = 1:numel(indNames) % which individual
                 indName = indNames{ind};
                 
@@ -236,6 +237,9 @@ for NNtest = 1:numel(NNtests) % which test
                 if ~isfield( fullData{condition}.(indName).(bps{bp}), NNtests{NNtest} )
                     continue
                 end
+                
+                % Number of individual per condition / brainpart / NNtest
+                Nind = Nind+1;
                 
                 % plot the experimental cdf
                 dnExp = fullData{condition}.(indName).(bps{bp}).(NNtests{NNtest}).dn;
@@ -252,7 +256,7 @@ for NNtest = 1:numel(NNtests) % which test
                 hSimu{numel(hSimu)+1} = plot(xSimu,fSimu,'--','Color',[lineColors(condition,:) 0.5]);
             end
             clegs = [clegs, hExp{numel(hExp)}, hSimu{numel(hSimu)}];
-            legs = [legs, sprintf('%s (N=%d)',conditions{condition},numel(fieldnames(fullData{condition}))),...
+            legs = [legs, sprintf('%s (N=%d)',conditions{condition},Nind),...
                 strcat(conditions(condition),' simus')];
         end
         legend(clegs,legs,'Location','southeast');
