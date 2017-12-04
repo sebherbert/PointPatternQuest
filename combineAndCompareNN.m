@@ -24,20 +24,19 @@ bps = {'allSample','dm'}; % parts of the brain (not da for the moment since not 
 NNtests = {'t2vst2','t3vst3','t3vst2'}; % tested cell types
 conds = {'Young','Drug','Old'}; % Conditions to be tested => CHECK THE ORDER WITH allDATA STRUCTURE
 
-temp = load('/media/sherbert/Data/Projects/OG_projects/Project6_ND_distribPattern/dataFolder/loader.mat'); % temporary
+% temp = load('/media/sherbert/Data/Projects/OG_projects/Project6_ND_distribPattern/dataFolder/loader.mat'); % temporary
 
-% tempFold = uipickfiles('Prompt','Please, select the output folder');
-tempFold = {'/media/sherbert/Data/Projects/OG_projects/Project6_ND_distribPattern/dataFolder/Output'};
+tempFold = uipickfiles('Prompt','Please, select the output folder');
+% tempFold = {'/media/sherbert/Data/Projects/OG_projects/Project6_ND_distribPattern/dataFolder/Output'};
 PARAMS.outputFold = [tempFold{1} filesep];
 
 
 % Load populations
 allData = {};
 for condition = 1:numel(conds) % for each condition
-    %     multiFoldPath = uipickfiles('Prompt',sprintf('Select the folders of
-    %     individual in the %s population',conds{condition})); % temporarilly
-    %     killed
-    multiFoldPath = temp.foldPaths{condition};
+    multiFoldPath = uipickfiles('Prompt',...
+        sprintf('Select the folders of individual in the %s population',conds{condition}));
+    %     multiFoldPath = temp.foldPaths{condition};
     for folderOI = 1:length(multiFoldPath) % for each selected folder
         folderInfo = dir(multiFoldPath{folderOI}); % find objects into the folder
         for obj = 1:length(folderInfo)
@@ -59,41 +58,6 @@ for condition = 1:numel(conds) % for each condition
         end
     end
 end
-
-
-% % => Old test version
-% dataYoung.ind1.all = dataCombined;
-% dataYoung.ind2.all = dataCombined;
-% dataYoung.ind3.all = dataCombined;
-% dataOld.ind1.all = dataCombined;
-% dataOld.ind2.all = dataCombined;
-% dataOld.ind3.all = dataCombined;
-% dataDrug.ind1.all = dataCombined;
-% dataDrug.ind2.all = dataCombined;
-% dataDrug.ind3.all = dataCombined;
-% 
-% dataYoung.ind1.da = dataCombined;
-% dataYoung.ind2.da = dataCombined;
-% dataYoung.ind3.da = dataCombined;
-% dataOld.ind1.da = dataCombined;
-% dataOld.ind2.da = dataCombined;
-% dataOld.ind3.da = dataCombined;
-% dataDrug.ind1.da = dataCombined;
-% dataDrug.ind2.da = dataCombined;
-% dataDrug.ind3.da = dataCombined;
-% 
-% dataYoung.ind1.dl = dataCombined;
-% dataYoung.ind2.dl = dataCombined;
-% dataYoung.ind3.dl = dataCombined;
-% dataOld.ind1.dl = dataCombined;
-% dataOld.ind2.dl = dataCombined;
-% dataOld.ind3.dl = dataCombined;
-% dataDrug.ind1.dl = dataCombined;
-% dataDrug.ind2.dl = dataCombined;
-% dataDrug.ind3.dl = dataCombined;
-% 
-% allData = {dataYoung, dataDrug, dataOld};
-
 
 %% Display inter and intra (1 color each) subplot 3(parts)x3tests
 lineColors = lines(2); % compare populations 2x2
@@ -244,7 +208,8 @@ for NNtest = 1:numel(NNtests) % which test
                 hSimu{numel(hSimu)+1} = plot(xSimu,fSimu,'.--','Color',lineColors(condition,:));
             end
             clegs = [clegs, hExp{numel(hExp)}, hSimu{numel(hSimu)}];
-            legs = [legs, conditions(condition), strcat(conditions(condition),' simu')];
+            legs = [legs, sprintf('%s (N=%d)',conditions{condition},numel(fieldnames(fullData{condition}))),...
+                strcat(conditions(condition),' simus')];
         end
         legend(clegs,legs,'Location','southeast');
         legend boxoff;
