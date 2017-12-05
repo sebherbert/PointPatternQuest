@@ -27,8 +27,8 @@ conds = {'Young','Old','Drug'}; % Conditions to be tested => CHECK THE ORDER WIT
 
 % temp = load('/media/sherbert/Data/Projects/OG_projects/Project6_ND_distribPattern/dataFolder/loader.mat'); % temporary
 
-tempFold = uipickfiles('Prompt','Please, select the output folder');
-% tempFold = {'/media/sherbert/Data/Projects/OG_projects/Project6_ND_distribPattern/dataFolder/Output'};
+% tempFold = uipickfiles('Prompt','Please, select the output folder');
+tempFold = {'/media/sherbert/Data/Projects/OG_projects/Project6_ND_distribPattern/dataFolder/test'};
 PARAMS.outputFold = [tempFold{1} filesep];
 
 
@@ -96,8 +96,114 @@ for condition1 = 1:numel(conds)
 end
 
 % Reshape for reading in 3x3 tables cf excel sheets (name rows and lines)
+rsKSpInter = reshapeKS(ksInter,'ksInter',individualNames);
+rsKSpIntra = reshapeKS(ksIntra,'ksIntra',individualNames);
 
-save([PARAMS.outputFold 'ksResults'],'ksInter','ksIntra');
+save([PARAMS.outputFold 'ksResults'],'ksInter','ksIntra','rsKSpInter','rsKSpIntra');
+
+end
+
+function rsKSp = reshapeKS(ksStruct,structName,individualNames)
+% Reshape the KS tests to make it more readable
+
+rsKSp = {};
+crossTests = fieldnames(ksStruct);
+for crossTest = 1:numel(crossTests)
+    crossInds = fieldnames(ksStruct.(crossTests{crossTest}));
+    for crossInd = 1:numel(crossInds)
+        localBps = fieldnames(ksStruct.(crossTests{crossTest}).(crossInds{crossInd}));
+        for localBp = 1:numel(localBps)
+            localNNts = fieldnames(ksStruct.(crossTests{crossTest}).(crossInds{crossInd}). ...
+                (localBps{localBp}));
+            for localNNt = 1:numel(localNNts)
+                
+                tempInd = regexp((crossInds{crossInd}),'(?<=ind[^0-9]*)\d*','match');
+                if numel(tempInd) > 2
+                    fprintf('WARNING: Reshaping of %s failed (too many ind)',structName);
+                    break
+                elseif numel(tempInd) < 2
+                    fprintf('WARNING: Reshaping of %s failed (too few ind)',structName);
+                end
+                
+                % Save KSs in an array
+                ksTemp = ksStruct.(crossTests{crossTest}).(crossInds{crossInd}). ...
+                    (localBps{localBp}).(localNNts{localNNt}).p;
+                
+                rsKSp.(crossTests{crossTest}).(localNNts{localNNt}). ...
+                    (localBps{localBp})(str2double(tempInd{1}),str2double(tempInd{2})) = ...
+                    ksTemp;
+
+                
+                % must keep track of every individual in the table to recover the proper
+                % names afterward => here we save the ind#
+                if isfield(rsKSp.(crossTests{crossTest}).(localNNts{localNNt}), ([localBps{localBp} '_AllRowNames']))
+                    rsKSp.(crossTests{crossTest}).(localNNts{localNNt}).([localBps{localBp} '_AllRowNames'])(end+1) = ...
+                        str2double(tempInd{1});
+                    %                         horzcat(rsKSp.(crossTests{crossTest}).(localNNts{localNNt}).([localBps{localBp} '_AllRowNames']),...
+                    rsKSp.(crossTests{crossTest}).(localNNts{localNNt}).([localBps{localBp} '_AllVarNames'])(end+1) = ...
+                        str2double(tempInd{2});
+                    %                         horzcat(rsKSp.(crossTests{crossTest}).(localNNts{localNNt}).([localBps{localBp} '_AllVarNames']),...
+
+                else
+                    rsKSp.(crossTests{crossTest}).(localNNts{localNNt}).([localBps{localBp} '_AllRowNames']) = ...
+                        str2double(tempInd{1});
+                    rsKSp.(crossTests{crossTest}).(localNNts{localNNt}).([localBps{localBp} '_AllVarNames']) = ...
+                        str2double(tempInd{2});
+                end
+                    
+            end
+        end
+    end
+end
+
+% Change arrays for tables with individual names
+crossTests = fieldnames(rsKSp);
+for crossTest = 1:numel(crossTests)
+    localNNts = fieldnames(rsKSp.(crossTests{crossTest}));
+    for localNNt = 1:numel(localNNts)
+        localBps = fieldnames(rsKSp.(crossTests{crossTest}).(localNNts{localNNt}));
+        for localBp = 1:numel(localBps)
+            
+            % check if the field name is filled with data or legends
+            if contains(localBps{localBp},'Names')
+                continue
+            end
+            
+            tempTable = array2table(rsKSp.(crossTests{crossTest}).(localNNts{localNNt}).(localBps{localBp}));
+            % Create the names array
+            localConds = regexp(crossTests{crossTest},'vs','split');
+                        
+            % Set the row names
+            clear allRN
+            UniqRowNames = unique(rsKSp.(crossTests{crossTest}).(localNNts{localNNt}).([localBps{localBp} '_AllRowNames']));
+            for indN = 1:size(tempTable,1)
+                allRN{indN} = individualNames.(localConds{1}).(sprintf('ind%d', UniqRowNames(indN)));
+                if ~isvarname(allRN{indN})
+                    allRN{indN} = sprintf('Ind_%s',allRN{indN});
+                end
+            end
+            tempTable.Properties.RowNames = allRN;
+
+            % Set the column names
+            clear allVN
+            if numel(localConds)==1
+                allVN = allRN;
+            else
+                UniqVarNames = unique(rsKSp.(crossTests{crossTest}).(localNNts{localNNt}).([localBps{localBp} '_AllVarNames']));
+                for indN = 1:size(tempTable,2)
+                    allVN{indN} = individualNames.(localConds{2}).(sprintf('ind%d', UniqVarNames(indN)));
+                    if ~isvarname(allVN{indN})
+                        allVN{indN} = sprintf('Ind_%s',allVN{indN});
+                    end
+                end
+            end
+            tempTable.Properties.VariableNames = allVN;
+            
+ 
+            rsKSp.(crossTests{crossTest}).(localNNts{localNNt}).(localBps{localBp}) = tempTable;
+        end
+    end
+end
 
 end
 
@@ -115,7 +221,7 @@ for NNtest = 1:numel(NNtests) % which test
             indNames = fieldnames(fullData{condition});
             for ind1 = 1:numel(indNames) % which individual 1 
                 ind1Name = indNames{ind1};
-                for ind2 = ind1:numel(indNames) % which individual 2
+                for ind2 = 1:numel(indNames) % which individual 2
                     
                     ind2Name = indNames{ind2};
                     
