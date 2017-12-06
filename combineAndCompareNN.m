@@ -79,6 +79,11 @@ end
 % Pool all the conditions
 lineColors = lines(numel(conds));
 displaySubPlots({allData{1},allData{2},allData{3}},conds,bps,NNtests,lineColors,PARAMS);
+% 
+% for condition = 1:numel(conds) 
+%     displayPerCondition(PARAMS)
+% end
+% 
 
 
 %% ks tests
@@ -368,7 +373,9 @@ for NNtest = 1:numel(NNtests) % which test
         legend(clegs,legs,'Location','southeast');
         legend boxoff;
         axis(PARAMS.axes);
-        xlabel('CDF of nearest neighbour (in cell diameter)');
+        if (((bp-1)*3+NNtest) >= 7)
+            xlabel('CDF of NN (cell diam)');
+        end
     end
 end
       
