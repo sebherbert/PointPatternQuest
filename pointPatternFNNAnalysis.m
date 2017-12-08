@@ -54,11 +54,14 @@ dnExp = dnExp/CellDiameter;
 %     GExp(i) = size(dnExp(dnExp<=r(i)),2)/size(dnExp,2);
 % end
 
-% Display experimental populations cells => temporary
+% Display experimental populations cells
 figure
 hold on
-plot3(popPermut3Dpos(:,1),popPermut3Dpos(:,2),popPermut3Dpos(:,3),'o');
-plot3(popTarget3Dpos(:,1),popTarget3Dpos(:,2),popTarget3Dpos(:,3),'.');
+plot3(popPermut3Dpos(:,1),popPermut3Dpos(:,2),popPermut3Dpos(:,3),'o','MarkerEdgeColor',[186,212,244]/256);
+plot3(popTarget3Dpos(:,1),popTarget3Dpos(:,2),popTarget3Dpos(:,3),'.','Color',[0.851,0.325,0.098]);
+if samePop==false
+    plot3(popSource3Dpos(:,1),popSource3Dpos(:,2),popSource3Dpos(:,3),'.','Color',[0,0.498,0]);
+end
 axis equal
 
 
@@ -89,7 +92,7 @@ displayCDFs(expCDFs, simuCDFs, PARAMS)
 % % hold on
 % % plot(xSimus,[fSimusLo5 fSimusUp5], '.--');
 % 
-% 
+% 8.0
 % % Display figure
 % figTitle = ['Type II (random permutations in I and II) CellDiameter=',num2str(CellDiameter,2),'{\mu}m'];
 % figSavePath = [path,name,'Case',num2str(k),'_Analysis03Fig1'];
@@ -170,7 +173,8 @@ for perm = 1:PARAMS.numPermut % for each permutation run
         
     else
         % Adapt the probability map once and for all (no adaptation if there is no
-        % spatial effect)        
+        % spatial effect) => Could also be done once and for all at the beginning 
+        % of the simulations
         if strcmp(PARAMS.effect,'Repulsion')
             fprintf('ERROR: Spatial effect not ready%s\n', PARAMS.effect);
             probMap = sum(NNExp.cellType == pops.popPermut,2); % TBChanged ! 
