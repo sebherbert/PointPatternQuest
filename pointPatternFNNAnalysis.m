@@ -145,8 +145,11 @@ for perm = 1:PARAMS.numPermut % for each permutation run
         % every step of the draw
         for bioCell = 1:nTarget
             tempCell = datasample(NNExp,1,'Weights',probMap);
-            probMap(tempCell.cellID) = 0; % be careful at not putting it back at more than 0 by the attraction effect ! 
-            % Same for the permet effect ! 
+            % Take cell out of the permutable population
+            % be careful at not putting it back at more than 0 by an attractive or repulsive effect !
+            probMap(tempCell.cellID) = 0;
+            
+            % Adapt the probability map of the other cells based on the draw.
             if strcmp(PARAMS.effect,'Repulsion')
                 fprintf('ERROR: Spatial effect not ready%s\n', PARAMS.effect);
                 probMap = sum(NNExp.cellType == pops.popPermut,2); % TBChanged !
@@ -157,13 +160,17 @@ for perm = 1:PARAMS.numPermut % for each permutation run
                 fprintf('ERROR: Unknown spatial effect %s\n', PARAMS.effect);
                 break
             end
+            
+            % Add the drawn cell to the complete simulated draw
             popTargetSimu{perm} = [popTargetSimu{perm};tempCell];
-            %             % Draw one cell
-            %             % Adapt probMap (area around and checkout the drawed cell)
         end
+        
+        % In this case target and source populations are the same
         popSourceSimu{perm} = popTargetSimu{perm};
+        
     else
-        % Change probMap once and for all
+        % Adapt the probability map once and for all (no adaptation if there is no
+        % spatial effect)        
         if strcmp(PARAMS.effect,'Repulsion')
             fprintf('ERROR: Spatial effect not ready%s\n', PARAMS.effect);
             probMap = sum(NNExp.cellType == pops.popPermut,2); % TBChanged ! 
@@ -180,7 +187,10 @@ for perm = 1:PARAMS.numPermut % for each permutation run
         popSourceSimu{perm} = NNExp(NNExp.cellType == pops.popSource, :);
     end
     
+    % Find the Nearest neighbours in the population
     dnSimu(:,perm) = findNN(popSourceSimu{perm}.pos3D, popTargetSimu{perm}.pos3D, samePop, pops);
+    
+    % Calculate the cdf histogram
     for i=1:size(PARAMS.binSize,2)
         Grand(perm,i)= sum(dnSimu(:,perm)<PARAMS.binSize(i)) / numel(dnSimu(:,perm));
     end
@@ -208,10 +218,10 @@ simuCDFs.fsUp5 = zeros(nTarget+1,PARAMS.numPermut);
 simuCDFs.fsLo1 = zeros(nTarget+1,PARAMS.numPermut);
 simuCDFs.fsUp1 = zeros(nTarget+1,PARAMS.numPermut);
 for simu = 1:PARAMS.numPermut % each simulation is treated individually
-    % ERROR: Sometimes, the nearest neighbour are symetrical and return the
-    % same distance => are counted as one step in the cdf of twice the size
-    % which messes up the number of positions => error in table and error in
-    % averaging
+    % ERROR: Sometimes if popSource = popTarget, the nearest neighbour are
+    % symetrical and return the same distance => are counted as one step in the
+    % cdf of twice the size which messes up the number of positions => error in
+    % table and error in averaging
     [simuCDFs.fs(:,simu),simuCDFs.xs(:,simu),simuCDFs.fsLo5(:,simu),simuCDFs.fsUp5(:,simu)] = ecdf(dnSimu(:,simu),'alpha',0.05);
     [~,~,simuCDFs.fsLo1(:,simu),simuCDFs.fsUp1(:,simu)] = ecdf(dnSimu(:,simu),'alpha',0.01);
 end
@@ -231,28 +241,38 @@ function displayCDFs(expCDFs, simuCDFs, PARAMS)
 figure
 
 ylabel('Cumulative cell frequency');
-xlabel('distance to nearest neighbor (in cell diameter)');
+xlabel('Distance to nearest neighbor (in cell diameter)');
+
+% Use 2 colors only
+colors = [lines(2) [0.5;0.5]];
+
+hold on
+% Plot the experimental data
+h(1) = plot(expCDFs.x,expCDFs.f,'linewidth',2,'Color',colors(2,1:3));
+h(2) = plot(expCDFs.x,expCDFs.fLo5,'linewidth',1,'Color',colors(2,:));
+plot(expCDFs.x,expCDFs.fUp5,'linewidth',1,'Color',colors(2,:));
+h(3) = plot(expCDFs.x,expCDFs.fLo1,'--','linewidth',1,'Color',colors(2,:));
+plot(expCDFs.x,expCDFs.fUp1,'--','linewidth',1,'Color',colors(2,:));
 
 % Plot the simulation dispersions
-hold on
-plot(simuCDFs.x,simuCDFs.f,'k','linewidth',2);
-plot(simuCDFs.x,simuCDFs.fLo5,'linewidth',1,'color',[0.6 0.6 0.6]);
-plot(simuCDFs.x,simuCDFs.fUp5,'linewidth',1,'color',[0.6 0.6 0.6]);
-plot(simuCDFs.x,simuCDFs.fLo1,'--','linewidth',1,'color',[0.6 0.6 0.6]);
-plot(simuCDFs.x,simuCDFs.fUp1,'--','linewidth',1,'color',[0.6 0.6 0.6]);
 
-% Plot the experimental data
-plot(expCDFs.x,expCDFs.f,'linewidth',2,'Color',lines(1));
-plot(expCDFs.x,expCDFs.fLo5,'linewidth',1,'Color',lines(1));
-plot(expCDFs.x,expCDFs.fUp5,'linewidth',1,'Color',lines(1));
-plot(expCDFs.x,expCDFs.fLo1,'--','linewidth',1,'Color',lines(1));
-plot(expCDFs.x,expCDFs.fUp1,'--','linewidth',1,'Color',lines(1));
+h(4) = plot(simuCDFs.x,simuCDFs.f,'linewidth',2,'color',colors(1,1:3));
+h(5) = plot(simuCDFs.x,simuCDFs.fLo5,'linewidth',1,'color',colors(1,:));
+plot(simuCDFs.x,simuCDFs.fUp5,'linewidth',1,'color',colors(1,:));
+h(6) = plot(simuCDFs.x,simuCDFs.fLo1,'--','linewidth',1,'color',colors(1,:));
+plot(simuCDFs.x,simuCDFs.fUp1,'--','linewidth',1,'color',colors(1,:));
 
 text(0.5,0.95,'95% and 99% intervals')
 text(0.5,0.9,[num2str(PARAMS.numPermut),' random perm.'])
 
 % force the axes
-axis([0 14 0 1]);
+axis([0 5 0 1]);
+
+% display legend
+legend(h,{'Experimental data','95% enveloppe','99% enveloppe', ...
+    'Simulated data','95% enveloppe','99% enveloppe'},'Location','southeast');
+legend boxoff;
+
 
 % if 2*ceil(xScale(min(find(NN>0.9))))<14
 %     axis([0 2*ceil(xScale(min(find(NN>0.9)))) 0 1]);
