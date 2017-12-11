@@ -44,9 +44,6 @@ end
 % Find nearest neighbour
 dnExp = findNN(popSource3Dpos, popTarget3Dpos, samePop, pops)';
 
-% Normalize distance by cell Diameter
-dnExp = dnExp/CellDiameter;
-
 % % calculate the cdf by hand... consider using ecdf for proper method
 % for i = 1:size(r,2)
 %     GExp(i) = size(dnExp(dnExp<=r(i)),2)/size(dnExp,2);
@@ -64,7 +61,7 @@ axis equal
 
 
 %% Effectuate the simulations of the random permutations of the popTarget
-[dnSimu, ~] = randomPerm(NNExp, pops, rowPermut, samePop, CellDiameter, nTarget, PARAMS);
+[dnSimu, ~] = randomPerm(NNExp, pops, rowPermut, samePop, nTarget, PARAMS);
 
 %% Calculate exp and simulations cdf and their dispersions individualy
 [expCDFs, simuCDFs] = formatCdfs(dnExp, dnSimu, nTarget, PARAMS);
@@ -100,6 +97,7 @@ displayCDFs(expCDFs, simuCDFs, PARAMS)
 % save([path,name,'Case',num2str(k),'_Analysis03NN'],'dnExp','GExp','r','Grand','GrandCdf');
 % 
 fullResults = {};
+fullResults.cellDiameter = CellDiameter;
 fullResults.dnExp = dnExp;
 % fullResults.GExp = GExp;
 % fullResults.GrandCdf = GrandCdf;
@@ -145,7 +143,7 @@ end
 
 end
 
-function [dnSimu, Grand] = randomPerm(NNExp, pops, rowPermut, samePop, CellDiameter, nTarget, PARAMS)
+function [dnSimu, Grand] = randomPerm(NNExp, pops, rowPermut, samePop, nTarget, PARAMS)
 % Simulates random draws of the popTarget population among the popPermut
 % population, considering the effect of the popSource population on the
 % next draw.
@@ -226,10 +224,6 @@ for perm = 1:PARAMS.numPermut % for each permutation run
         Grand(perm,i)= sum(dnSimu(:,perm)<PARAMS.binSize(i)) / numel(dnSimu(:,perm));
     end
 end
-
-% Normalize distance by cell Diameter
-% Grand = Grand/CellDiameter;
-dnSimu = dnSimu/CellDiameter;
 
 end
 
