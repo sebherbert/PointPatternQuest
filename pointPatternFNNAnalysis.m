@@ -1,9 +1,7 @@
 
 
 
-% S=S(S==1|S==2)'; for Analysis 3
-
-function full_Results = pointPatternFNNAnalysis(fullPath, NNExp, pops, PARAMS)
+function fullResults = pointPatternFNNAnalysis(fullPath, NNExp, pops, PARAMS)
 % Measure and compare the nearest neighbour distance in experimental data
 % and simulations
 %{
@@ -59,7 +57,7 @@ figure
 hold on
 plot3(popPermut3Dpos(:,1),popPermut3Dpos(:,2),popPermut3Dpos(:,3),'o','MarkerEdgeColor',[186,212,244]/256);
 plot3(popTarget3Dpos(:,1),popTarget3Dpos(:,2),popTarget3Dpos(:,3),'.','Color',[0.851,0.325,0.098]);
-if samePop==false
+if samePop == false
     plot3(popSource3Dpos(:,1),popSource3Dpos(:,2),popSource3Dpos(:,3),'.','Color',[0,0.498,0]);
 end
 axis equal
@@ -101,10 +99,30 @@ displayCDFs(expCDFs, simuCDFs, PARAMS)
 % 
 % save([path,name,'Case',num2str(k),'_Analysis03NN'],'dnExp','GExp','r','Grand','GrandCdf');
 % 
-% fullResults = {};
-% fullResults.dnExp = dnExp;
+fullResults = {};
+fullResults.dnExp = dnExp;
 % fullResults.GExp = GExp;
 % fullResults.GrandCdf = GrandCdf;
+fullResults.dnSimu = dnSimu;
+
+end
+
+function displayProbMap(NNExp, probMap, PARAMS)
+% Display probaMap as a colormap applied on the permutable population
+
+all3Dsource = table2array(NNExp(NNExp.cellType == pops.popSource, {'pos3D'}));
+all3Dpermut = table2array(NNExp(rowPermut, {'pos3D'}));
+
+colors = colormap(parula(log(max(probMap))/log(PARAMS.effectStrength)+1));
+for bioCell = 1:size(all3Dpermut,1)
+    colorScat(bioCell,:) = colors(log(probMap(bioCell))/log(PARAMS.effectStrength)+1,:);
+end
+
+figure
+% scatter3(all3Dpermut(:,1),all3Dpermut(:,2),all3Dpermut(:,3),[],colors(probMap(:),:));
+scatter3(all3Dpermut(:,1),all3Dpermut(:,2),all3Dpermut(:,3),[],colorScat,'.');
+hold on
+scatter3(all3Dsource(:,1),all3Dsource(:,2),all3Dsource(:,3),'.','MarkerFaceColor',[0.098,0.325,0.851]);
 
 end
 
@@ -134,6 +152,11 @@ function [dnSimu, Grand] = randomPerm(NNExp, pops, rowPermut, samePop, CellDiame
 
 dnSimu = zeros(nTarget,PARAMS.numPermut);
 
+% Calculate all the cell-cell distances to use in the spatial effect
+% simulation effect
+cell2CellDist = pdist2(table2array(NNExp(:,{'pos3D'})),table2array(NNExp(:,{'pos3D'})));
+
+
 for perm = 1:PARAMS.numPermut % for each permutation run
     if mod(perm,100) == 0
         fprintf('Running permutation %d\n',perm);
@@ -155,7 +178,11 @@ for perm = 1:PARAMS.numPermut % for each permutation run
             % Adapt the probability map of the other cells based on the draw.
             if strcmp(PARAMS.effect,'Repulsion')
                 fprintf('ERROR: Spatial effect not ready%s\n', PARAMS.effect);
-                probMap = sum(NNExp.cellType == pops.popPermut,2); % TBChanged !
+                % Change cell draw probability in the surroundings of the drawned cell
+                % for each cell around 
+                % probMap(cellAround) = probMap(cellAround)/PARAMS.effectInt
+                probMap = adaptProbMap(sourceCells, ProbMap, PARAMS);
+                
             elseif strcmp(PARAMS.effect,'Attraction')
                 fprintf('ERROR: Spatial effect not ready%s\n', PARAMS.effect);
                 probMap = sum(NNExp.cellType == pops.popPermut,2); % TBChanged !
@@ -203,6 +230,24 @@ end
 % Normalize distance by cell Diameter
 % Grand = Grand/CellDiameter;
 dnSimu = dnSimu/CellDiameter;
+
+end
+
+function newProbMap = adaptProbMap(sourceCells, oriProbMap, cell2CellDist, PARAMS)
+% Adapt the draw probability map based on the desired effect, the drawned
+% cell(s)
+% -> 1 in the case of on the fly adaptation (same source and target pops)
+% -> N in the case of static probMap (different source and target pops)
+
+tempProbMap = oriProbMap;
+
+for bioCell = 1:length(sourceCells)
+    distsN = cell2CellDist(:,sourceCells(bioCell));
+    affectedCells = distsN<PARAMS.effectRange;
+    tempProbMap(affectedCells) = tempProbMap(affectedCells)*PARAMS.effectStrength;
+end
+
+newProbMap = tempProbMap;
 
 end
 

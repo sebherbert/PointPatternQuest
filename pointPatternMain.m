@@ -8,6 +8,7 @@ clear
 close all
 
 PARAMS = {};
+PARAMS.version = 'version0p1p0';
 PARAMS.dispDistrib_1 = 0;
 PARAMS.dispDensityMap_2 = 0;
 PARAMS.numPermut = 200;
@@ -167,13 +168,13 @@ if exist([path,name,ext])
     %     dataCombined.(tAnalysis) = pointPatternFNNAnalysis(fullPath, NNExp, pops, PARAMS);
     
     % Point pattern analysis Type 3 effect on type 3 in Type 1+2+3 (first neighbor)
-    %     pops.popSource = 3;
-    %     pops.popTarget = 3;
-    %     pops.popPermut = [1 2 3];
-    %     tAnalysis = sprintf('t%dvst%d',pops.popSource,pops.popTarget);
-    %     fullPath = [path, name, '_', tAnalysis];
-    %     fprintf('\nRunning analysis %s\n',tAnalysis);
-    %     dataCombined.(tAnalysis) = pointPatternFNNAnalysis(fullPath, NNExp, pops, PARAMS);
+%     pops.popSource = 3;
+%     pops.popTarget = 3;
+%     pops.popPermut = [1 2 3];
+%     tAnalysis = sprintf('t%dvst%d',pops.popSource,pops.popTarget);
+%     fullPath = [path, name, '_', tAnalysis];
+%     fprintf('\nRunning analysis %s\n',tAnalysis);
+%     dataCombined.(tAnalysis) = pointPatternFNNAnalysis(fullPath, NNExp, pops, PARAMS);
     
     % Point pattern analysis Type 3 effect on type 2 in Type 1+2 (first neighbor)
     pops.popSource = 3;
