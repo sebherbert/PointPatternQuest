@@ -1,20 +1,20 @@
-function fullResults = analysis03PPAFirstNeighbor(path,name,k,x,y,z,S,d12_all,d12_1,PARAMS)
-%Point pattern analysis Type 2 in Type 1+2 (first neighbor)
+function fullResults = analysis05PPAFirstNeighbor(path,name,k,x,y,z,S,d123_all,d123_1,PARAMS)
+%Point pattern analysis Type 3 in Type 1+2+3 (first neighbor)
 r=0:0.1:14; % bin size for the ecdf
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%Type 1+2 only
+%Type 1+2+3
 
-popSource = 2;
-popTarget = 2;
-popPermut = [1 2];
+popSource = 3;
+popTarget = 3;
+popPermut = [1 2 3];
 
-S=S(S==1|S==2)';
-CellDiameter=mean(d12_1);
+S=S';
+CellDiameter=mean(d123_1);
 
-index=find(S==2);
-for i=1:length(S(S==2))
-    dtemp=sort(d12_all(index(i),index));
+index=find(S==3);
+for i=1:length(S(S==3))
+    dtemp=sort(d123_all(index(i),index));
     dn(i)=dtemp(2);
 end
 
@@ -34,7 +34,7 @@ for j=1:NumPermut % for each permutation run
     S=S(randperm(length(S)));
     index=find(S==popTarget);
     for i=1:numel(index)
-        dtempSimu=sort(d12_all(index(i),index));
+        dtempSimu=sort(d123_all(index(i),index));
         dnSimu(i)=dtempSimu(2);
     end
     dnSimu=dnSimu/CellDiameter;
@@ -45,11 +45,17 @@ end
 
 % Display figure
 figTitle = ['Type II (random permutations in I and II) CellDiameter=',num2str(CellDiameter,2),'{\mu}m'];
-figSavePath = [path,name,'Case',num2str(k),'_Analysis03Fig1'];
+figSavePath = [path,name,'Case',num2str(k),'_Analysis05Fig1'];
 
+<<<<<<< HEAD
 GrandCdf = displaySimuPPQ(Grand, G, figTitle, figSavePath, PARAMS);
+=======
+GrandCdf = displaySimuPPQ(r, Grand, G, NumPermut, figTitle, figSavePath);
 
-% save([path,name,'Case',num2str(k),'_Analysis03NN'],'dn','G','r','Grand','GrandCdf');
+save([path,name,'Case',num2str(k),'_Analysis05NN'],'dn','G','r','Grand','GrandCdf');
+>>>>>>> master
+
+% save([path,name,'Case',num2str(k),'_Analysis05NN'],'dn','G','r','Grand','GrandCdf');
 
 fullResults = {};
 fullResults.dn = dn;

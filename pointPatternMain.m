@@ -8,7 +8,7 @@ clear
 close all
 
 PARAMS = {};
-PARAMS.version = 'version0p1p0';
+PARAMS.version = 'version0p1p1';
 PARAMS.dispDistrib_1 = 0;
 PARAMS.dispDensityMap_2 = 0;
 PARAMS.numPermut = 200;
@@ -21,13 +21,26 @@ PARAMS.strength = 2; % Strength of the effect of a cell on its neighbours
 
 % Display Parameters
 PARAMS.maxSizeCDF = 200; % maximum number of points on the cdf
-PARAMS.binSize = 0:0.1:30; % bin size for the ecdf => if force binning of ecdf
+PARAMS.binSize = 0:0.1:14; % bin size for the ecdf => if force binning of ecdf
 
 % File import
-% fileToOpen = uipickfiles('Prompt','Please, select the correct file to analyse (example: sox2_C_subdiv_L_corrected_nodb_noDl.ims)','num',1);
+fileToOpen = uipickfiles('Prompt','Please, select the correct file to analyse (example: sox2_C_subdiv_L_corrected_nodb_noDl.ims)');
 % for development purposes only
-fileToOpen = {'/media/sherbert/Data/Projects/OG_projects/Project6_ND_distribPattern/static_/preAnalysis_and_ims/sox2_C_subdiv_L_corrected_nodb_noDl_xyzCASE1.mat'};
-[path,name,ext] = fileparts(fileToOpen{1});
+% fileToOpen = {'/media/sherbert/Data/Projects/OG_projects/Project6_ND_distribPattern/static_/preAnalysis_and_ims/sox2_C_subdiv_L_corrected_nodb_noDl_xyzCASE1.mat'};
+
+for fileOfInterest = 1:length(fileToOpen)
+    
+    mainBodyFunction(fileToOpen{fileOfInterest},PARAMS);
+    
+end
+
+end
+
+function mainBodyFunction(dataFile,PARAMS)
+
+close all
+
+[path,name,ext] = fileparts(dataFile);
 path = [path, filesep];
 filename = [name,ext];
 
@@ -78,15 +91,14 @@ dataCombined.name = name;
 dataCombined.brainPart = brainPart;
 
 
-if exist([path,name,ext])
+if exist([path,name,ext]) % useless in the end...
     disp(name);
     load([path,name,ext]);
     
     % S = cell type
     % dN_M = distance in population N between cell of interest and Mth
     % neighbour
-    % 
-    
+    %
     if PARAMS.dispDistrib_1
         %% ANALYSIS 01: Distribution Display
         %Parameters Analysis 01
@@ -149,7 +161,7 @@ if exist([path,name,ext])
         clear ColorRange
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     end
-
+    
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% Point Pattern Analysis
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

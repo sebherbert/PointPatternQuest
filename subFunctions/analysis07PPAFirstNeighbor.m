@@ -1,4 +1,4 @@
-function fullResults = analysis07PPAFirstNeighbor(path,name,k,x,y,z,S,d123_all,d123_1)
+function fullResults = analysis07PPAFirstNeighbor(path,name,k,x,y,z,S,d123_all,d123_1,PARAMS)
 %Point pattern analysis Type 2 distance to Type 3 nearest cells in Type 1+2 (first neighbor)
 % Could use a list of all diameters instead of sending the specific one...
 r=0:0.1:14; % bin size for the ecdf
@@ -55,9 +55,11 @@ end
 figTitle = ['Type II (random permutations in I and II) CellDiameter=',num2str(CellDiameter,2),'{\mu}m'];
 figSavePath = [path,name,'Case',num2str(k),'_Analysis07Fig1'];
 
-GrandCdf = displaySimuPPQ(r, Grand, G, NumPermut, figTitle, figSavePath);
 
-save([path,name,'Case',num2str(k),'_Analysis07NN'],'dn','G','r','Grand','GrandCdf');
+
+GrandCdf = displaySimuPPQ(Grand, G, figTitle, figSavePath, PARAMS);
+
+% save([path,name,'Case',num2str(k),'_Analysis07NN'],'dn','G','r','Grand','GrandCdf');
 
 fullResults = {};
 fullResults.dn = dn;
