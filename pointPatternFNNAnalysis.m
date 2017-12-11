@@ -200,9 +200,12 @@ for perm = 1:PARAMS.numPermut % for each permutation run
         % Adapt the probability map once and for all (no adaptation if there is no
         % spatial effect) => Could also be done once and for all at the beginning 
         % of the simulations
+        
+        % extract source cells IDs 
+        sourceCells = table2array(NNExp(NNExp.cellType == pops.popSource, {'cellID'}));            
+        
         if strcmp(PARAMS.effect,'Repulsion')
-            fprintf('ERROR: Spatial effect not ready%s\n', PARAMS.effect);
-            probMap = sum(NNExp.cellType == pops.popPermut,2); % TBChanged ! 
+            adaptProbMap(sourceCells, probMap, cell2CellDist, PARAMS)
         elseif strcmp(PARAMS.effect,'Attraction')
             fprintf('ERROR: Spatial effect not ready%s\n', PARAMS.effect);
             probMap = sum(NNExp.cellType == pops.popPermut,2); % TBChanged ! 
@@ -230,6 +233,8 @@ end
 function newProbMap = adaptProbMap(sourceCells, oriProbMap, cell2CellDist, PARAMS)
 % Adapt the draw probability map based on the desired effect, the drawned
 % cell(s)
+% SourceCells = cellID of the source population to integrate into the
+% probMap
 % -> 1 in the case of on the fly adaptation (same source and target pops)
 % -> N in the case of static probMap (different source and target pops)
 

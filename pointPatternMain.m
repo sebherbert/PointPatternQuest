@@ -13,7 +13,7 @@ PARAMS.dispDistrib_1 = 0;
 PARAMS.dispDensityMap_2 = 0;
 PARAMS.numPermut = 200;
 
-PARAMS.effect = 'None'; 
+PARAMS.effect = 'Repulsion'; 
 % Type of effect of a cell on its nearest neighbours can only be 'None',
 % 'Repulsion', 'Attraction'
 PARAMS.range = 1; % Distance of effect of a cell on its neighbours
