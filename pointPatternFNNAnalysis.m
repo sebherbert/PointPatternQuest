@@ -19,9 +19,9 @@ Output:
 
 %}
 
-% For simpler reading
-cellType = NNExp.cellType;
-r = PARAMS.binSize;
+% % For simpler reading
+% cellType = NNExp.cellType;
+% r = PARAMS.binSize;
 
 % Find the average cell size by averaging the minimum cell to cell distance
 CellDiameter = mean(NNExp.nearestNeighbour);
@@ -50,14 +50,14 @@ dnExp = findNN(popSource3Dpos, popTarget3Dpos, samePop, pops)';
 % end
 
 % Display experimental populations cells
-figure
-hold on
-plot3(popPermut3Dpos(:,1),popPermut3Dpos(:,2),popPermut3Dpos(:,3),'o','MarkerEdgeColor',[186,212,244]/256);
-plot3(popTarget3Dpos(:,1),popTarget3Dpos(:,2),popTarget3Dpos(:,3),'.','Color',[0.851,0.325,0.098]);
-if samePop == false
-    plot3(popSource3Dpos(:,1),popSource3Dpos(:,2),popSource3Dpos(:,3),'.','Color',[0,0.498,0]);
-end
-axis equal
+% figure
+% hold on
+% plot3(popPermut3Dpos(:,1),popPermut3Dpos(:,2),popPermut3Dpos(:,3),'o','MarkerEdgeColor',[186,212,244]/256);
+% plot3(popTarget3Dpos(:,1),popTarget3Dpos(:,2),popTarget3Dpos(:,3),'.','Color',[0.851,0.325,0.098]);
+% if samePop == false
+%     plot3(popSource3Dpos(:,1),popSource3Dpos(:,2),popSource3Dpos(:,3),'.','Color',[0,0.498,0]);
+% end
+% axis equal
 
 
 %% Effectuate the simulations of the random permutations of the popTarget
@@ -67,6 +67,7 @@ axis equal
 [expCDFs, simuCDFs] = formatCdfs(dnExp, dnSimu, nTarget, PARAMS);
 
 %% Display all the CDFs
+figure
 displayCDFs(expCDFs, simuCDFs, PARAMS)
 
 % % 
@@ -99,9 +100,11 @@ displayCDFs(expCDFs, simuCDFs, PARAMS)
 fullResults = {};
 fullResults.cellDiameter = CellDiameter;
 fullResults.dnExp = dnExp;
+fullResults.expCDFs = expCDFs;
+fullResults.dnSimu = dnSimu;
+fullResults.simuCDFs = simuCDFs;
 % fullResults.GExp = GExp;
 % fullResults.GrandCdf = GrandCdf;
-fullResults.dnSimu = dnSimu;
 
 end
 
@@ -174,18 +177,18 @@ for perm = 1:PARAMS.numPermut % for each permutation run
             probMap(tempCell.cellID) = 0;
             
             % Adapt the probability map of the other cells based on the draw.
-            if strcmp(PARAMS.effect,'Repulsion')
-                fprintf('ERROR: Spatial effect not ready%s\n', PARAMS.effect);
+            if strcmp(PARAMS.effectType,'Repulsion')
+                fprintf('ERROR: Spatial effect not ready%s\n', PARAMS.effectType);
                 % Change cell draw probability in the surroundings of the drawned cell
                 % for each cell around 
                 % probMap(cellAround) = probMap(cellAround)/PARAMS.effectInt
                 probMap = adaptProbMap(sourceCells, ProbMap, PARAMS);
                 
-            elseif strcmp(PARAMS.effect,'Attraction')
-                fprintf('ERROR: Spatial effect not ready%s\n', PARAMS.effect);
+            elseif strcmp(PARAMS.effectType,'Attraction')
+                fprintf('ERROR: Spatial effect not ready%s\n', PARAMS.effectType);
                 probMap = sum(NNExp.cellType == pops.popPermut,2); % TBChanged !
-            elseif ~strcmp(PARAMS.effect,'None')
-                fprintf('ERROR: Unknown spatial effect %s\n', PARAMS.effect);
+            elseif ~strcmp(PARAMS.effectType,'None')
+                fprintf('ERROR: Unknown spatial effect %s\n', PARAMS.effectType);
                 break
             end
             
@@ -204,13 +207,12 @@ for perm = 1:PARAMS.numPermut % for each permutation run
         % extract source cells IDs 
         sourceCells = table2array(NNExp(NNExp.cellType == pops.popSource, {'cellID'}));            
         
-        if strcmp(PARAMS.effect,'Repulsion')
-            adaptProbMap(sourceCells, probMap, cell2CellDist, PARAMS)
-        elseif strcmp(PARAMS.effect,'Attraction')
-            fprintf('ERROR: Spatial effect not ready%s\n', PARAMS.effect);
-            probMap = sum(NNExp.cellType == pops.popPermut,2); % TBChanged ! 
-        elseif ~strcmp(PARAMS.effect,'None')
-            fprintf('ERROR: Unknown spatial effect %s\n', PARAMS.effect);
+        if strcmp(PARAMS.effectType,'Repulsion')
+            probMap = adaptProbMap(sourceCells, probMap, cell2CellDist, PARAMS);
+        elseif strcmp(PARAMS.effectType,'Attraction')
+            probMap = adaptProbMap(sourceCells, probMap, cell2CellDist, PARAMS);
+        elseif ~strcmp(PARAMS.effectType,'None')
+            fprintf('ERROR: Unknown spatial effect %s\n', PARAMS.effectType);
             break
         end
         
@@ -246,6 +248,10 @@ for bioCell = 1:length(sourceCells)
     tempProbMap(affectedCells) = tempProbMap(affectedCells)*PARAMS.effectStrength;
 end
 
+% if later choose to change the multiplication factor by an additive term,
+% multiply tempProMap by a vector containing the 0 positions of the
+% oriProbMap (1 otherwise) to ensure conservation of the forbidden
+% positions
 newProbMap = tempProbMap;
 
 end
@@ -286,10 +292,8 @@ end
 
 function displayCDFs(expCDFs, simuCDFs, PARAMS)
 
-figure
-
 ylabel('Cumulative cell frequency');
-xlabel('Distance to nearest neighbor (in cell diameter)');
+xlabel('Distance to nearest neighbor (µm)');
 
 % Use 2 colors only
 colors = [lines(2) [0.5;0.5]];
@@ -314,7 +318,7 @@ text(0.5,0.95,'95% and 99% intervals')
 text(0.5,0.9,[num2str(PARAMS.numPermut),' random perm.'])
 
 % force the axes
-axis([0 5 0 1]);
+axis([0 30 0 1]);
 
 % display legend
 legend(h,{'Experimental data','95% enveloppe','99% enveloppe', ...
