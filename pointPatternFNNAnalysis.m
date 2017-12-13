@@ -259,50 +259,74 @@ end
 function [expCDFs, simuCDFs] = formatCdfs(dnExp, dnSimu, nTarget, PARAMS)
 
 % Calculate the CDFs of the experimental population
-[expCDFs.f,expCDFs.x,expCDFs.fLo5,expCDFs.fUp5] = ecdf(dnExp,'alpha',0.05);
-[~,~,expCDFs.fLo1,expCDFs.fUp1] = ecdf(dnExp,'alpha',0.01);
+[expCDFs.f,expCDFs.x,expCDFs.f5,expCDFs.f95] = ecdf(dnExp,'alpha',0.05);
+[~,~,expCDFs.f1,expCDFs.f99] = ecdf(dnExp,'alpha',0.01);
+
+% %% unconclusive version using the greenwood estimator of the variance for each individual cdf
+% % Calculate the CDFs of the simulated populations
+% for simu = 1:PARAMS.numPermut % each simulation is treated individually
+%     % WARNING: Sometimes if popSource = popTarget, the nearest neighbour are
+%     % symetrical and return the same distance => are counted as one step in the
+%     % cdf of twice the size which messes up the number of positions => error in
+%     % table and error in averaging, corrected by interpolation
+%     [simuCDFs.indiv{simu}.f,simuCDFs.indiv{simu}.x,simuCDFs.indiv{simu}.fsLo5,simuCDFs.indiv{simu}.fsUp5] = ...
+%         ecdf(dnSimu(:,simu),'alpha',0.05);
+%     [~,~,simuCDFs.indiv{simu}.fsLo1,simuCDFs.indiv{simu}.fsUp1] = ecdf(dnSimu(:,simu),'alpha',0.01);
+%     
+%     
+%     % In order to avoid dimension mismatch, cdfs are interpolated on fixed
+%     % abscissa with fixed periodicity before being merged together
+%     simuCDFs.xs(:,simu) = PARAMS.binSize;
+%     simuCDFs.fs(:,simu) = interp1([0;unique(simuCDFs.indiv{simu}.x)],...
+%         simuCDFs.indiv{simu}.f,PARAMS.binSize);
+%     simuCDFs.fsLo5(:,simu) = interp1([0;unique(simuCDFs.indiv{simu}.x)],...
+%          simuCDFs.indiv{simu}.fsLo5,PARAMS.binSize);
+%     simuCDFs.fsUp5(:,simu) = interp1([0;unique(simuCDFs.indiv{simu}.x)],...
+%         simuCDFs.indiv{simu}.fsUp5,PARAMS.binSize);
+%     simuCDFs.fsLo1(:,simu) = interp1([0;unique(simuCDFs.indiv{simu}.x)],...
+%         simuCDFs.indiv{simu}.fsLo1,PARAMS.binSize);
+%     simuCDFs.fsUp1(:,simu) = interp1([0;unique(simuCDFs.indiv{simu}.x)],...
+%         simuCDFs.indiv{simu}.fsUp1,PARAMS.binSize);
+% end
+% 
+% % Switch NaNs for 1 (for high values of x, the interpolation returns NaN
+% % when there are no available values
+% simuCDFs.fs(isnan(simuCDFs.fs)) = 1;
+% % simuCDFs.fLo5 = 1 % ENVELOPES SHOULD NOT BE SUBJECT TO THE SAME SWITCH !!!
+% % simuCDFs.fUp5 = 1 % ENVELOPES SHOULD NOT BE SUBJECT TO THE SAME SWITCH !!!
+% % simuCDFs.fLo1 = 1 % ENVELOPES SHOULD NOT BE SUBJECT TO THE SAME SWITCH !!!
+% % simuCDFs.fUp1 = 1 % ENVELOPES SHOULD NOT BE SUBJECT TO THE SAME SWITCH !!!
+
+
+%% New version using a "simpler" and more manual percentile approach (still kept 
+% Greenwood for the experimental cdf. (same process as original WS's)
 
 % Calculate the CDFs of the simulated populations
 for simu = 1:PARAMS.numPermut % each simulation is treated individually
-    % ERROR: Sometimes if popSource = popTarget, the nearest neighbour are
-    % symetrical and return the same distance => are counted as one step in the
-    % cdf of twice the size which messes up the number of positions => error in
-    % table and error in averaging
-    [simuCDFs.indiv{simu}.f,simuCDFs.indiv{simu}.x,simuCDFs.indiv{simu}.fsLo5,simuCDFs.indiv{simu}.fsUp5] = ...
-        ecdf(dnSimu(:,simu),'alpha',0.05);
-    [~,~,simuCDFs.indiv{simu}.fsLo1,simuCDFs.indiv{simu}.fsUp1] = ecdf(dnSimu(:,simu),'alpha',0.01);
-    
+    [simuCDFs.indiv{simu}.f,simuCDFs.indiv{simu}.x] = ecdf(dnSimu(:,simu));
     
     % In order to avoid dimension mismatch, cdfs are interpolated on fixed
     % abscissa with fixed periodicity before being merged together
-    simuCDFs.xs(:,simu) = PARAMS.binSize;
+    %     simuCDFs.xs(:,simu) = PARAMS.binSize;
     simuCDFs.fs(:,simu) = interp1([0;unique(simuCDFs.indiv{simu}.x)],...
-        simuCDFs.indiv{simu}.f,PARAMS.binSize);
-    simuCDFs.fsLo5(:,simu) = interp1([0;unique(simuCDFs.indiv{simu}.x)],...
-         simuCDFs.indiv{simu}.fsLo5,PARAMS.binSize);
-    simuCDFs.fsUp5(:,simu) = interp1([0;unique(simuCDFs.indiv{simu}.x)],...
-        simuCDFs.indiv{simu}.fsUp5,PARAMS.binSize);
-    simuCDFs.fsLo1(:,simu) = interp1([0;unique(simuCDFs.indiv{simu}.x)],...
-        simuCDFs.indiv{simu}.fsLo1,PARAMS.binSize);
-    simuCDFs.fsUp1(:,simu) = interp1([0;unique(simuCDFs.indiv{simu}.x)],...
-        simuCDFs.indiv{simu}.fsUp1,PARAMS.binSize);
+        [0;simuCDFs.indiv{simu}.f(2:end)],PARAMS.binSize);
 end
 
-% Switch NaNs for 1 (for high values of x, the interpolation returns NaN
-% when there are no available values
+% Calculate the median simulation
 simuCDFs.fs(isnan(simuCDFs.fs)) = 1;
-% simuCDFs.fLo5 = 1 % ENVELOPES SHOULD NOT BE SUBJECT TO THE SAME SWITCH !!!
-% simuCDFs.fUp5 = 1 % ENVELOPES SHOULD NOT BE SUBJECT TO THE SAME SWITCH !!!
-% simuCDFs.fLo1 = 1 % ENVELOPES SHOULD NOT BE SUBJECT TO THE SAME SWITCH !!!
-% simuCDFs.fUp1 = 1 % ENVELOPES SHOULD NOT BE SUBJECT TO THE SAME SWITCH !!!
-
-% Calculate the average simulation
-simuCDFs.f = mean(simuCDFs.fs,2);
-simuCDFs.x = mean(simuCDFs.xs,2);
-simuCDFs.fLo5 = mean(simuCDFs.fsLo5,2);
-simuCDFs.fUp5 = mean(simuCDFs.fsUp5,2);
-simuCDFs.fLo1 = mean(simuCDFs.fsLo1,2);
-simuCDFs.fUp1 = mean(simuCDFs.fsUp1,2);
+simuCDFs.x = PARAMS.binSize;
+% Use percentiles of the individually simulated cdfs to define an envelope
+tempOutput = prctile(simuCDFs.fs,[1 5 25 50 75 95 99],2);
+simuCDFs.f1pc = tempOutput(:,1);
+simuCDFs.f5pc = tempOutput(:,2);
+simuCDFs.f25pc = tempOutput(:,3);
+simuCDFs.f50pc = tempOutput(:,4);
+simuCDFs.f75pc = tempOutput(:,5);
+simuCDFs.f95pc = tempOutput(:,6);
+simuCDFs.f99pc = tempOutput(:,7);
+% Add additionnal measurements
+simuCDFs.fmean = mean(simuCDFs.fs,2);
+simuCDFs.fstd = std(simuCDFs.fs,[],2);
 
 end
 
@@ -317,35 +341,28 @@ colors = [lines(2) [0.5;0.5]];
 hold on
 % Plot the experimental data
 h(1) = plot(expCDFs.x,expCDFs.f,'linewidth',2,'Color',colors(2,1:3));
-h(2) = plot(expCDFs.x,expCDFs.fLo5,'linewidth',1,'Color',colors(2,:));
-plot(expCDFs.x,expCDFs.fUp5,'linewidth',1,'Color',colors(2,:));
-h(3) = plot(expCDFs.x,expCDFs.fLo1,'--','linewidth',1,'Color',colors(2,:));
-plot(expCDFs.x,expCDFs.fUp1,'--','linewidth',1,'Color',colors(2,:));
+h(2) = plot(expCDFs.x,expCDFs.f5,'linewidth',1,'Color',colors(2,:));
+plot(expCDFs.x,expCDFs.f95,'linewidth',1,'Color',colors(2,:));
+h(3) = plot(expCDFs.x,expCDFs.f1,'--','linewidth',1,'Color',colors(2,:));
+plot(expCDFs.x,expCDFs.f99,'--','linewidth',1,'Color',colors(2,:));
 
 % Plot the simulation dispersions
-h(4) = plot(simuCDFs.x,simuCDFs.f,'linewidth',2,'color',colors(1,1:3));
-h(5) = plot(simuCDFs.x,simuCDFs.fLo5,'linewidth',1,'color',colors(1,:));
-plot(simuCDFs.x,simuCDFs.fUp5,'linewidth',1,'color',colors(1,:));
-h(6) = plot(simuCDFs.x,simuCDFs.fLo1,'--','linewidth',1,'color',colors(1,:));
-plot(simuCDFs.x,simuCDFs.fUp1,'--','linewidth',1,'color',colors(1,:));
+h(4) = plot(simuCDFs.x,simuCDFs.f50pc,'linewidth',2,'color',colors(1,1:3));
+h(5) = plot(simuCDFs.x,simuCDFs.f5pc,'linewidth',1,'color',colors(1,:));
+plot(simuCDFs.x,simuCDFs.f95pc,'linewidth',1,'color',colors(1,:));
+h(6) = plot(simuCDFs.x,simuCDFs.f1pc,'--','linewidth',1,'color',colors(1,:));
+plot(simuCDFs.x,simuCDFs.f99pc,'--','linewidth',1,'color',colors(1,:));
 
 text(0.5,0.95,'95% and 99% intervals')
 text(0.5,0.9,[num2str(PARAMS.numPermut),' random perm.'])
 
 % force the axes
-axis([0 150 0 1]);
+axis(PARAMS.axis);
 
 % display legend
 legend(h,{'Experimental data','95% enveloppe','99% enveloppe', ...
     'Simulated data','95% enveloppe','99% enveloppe'},'Location','southeast');
 legend boxoff;
-
-
-% if 2*ceil(xScale(min(find(NN>0.9))))<14
-%     axis([0 2*ceil(xScale(min(find(NN>0.9)))) 0 1]);
-% else
-%     axis([0 14 0 1]);
-% end
 
 end
 

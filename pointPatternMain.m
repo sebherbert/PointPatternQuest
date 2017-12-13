@@ -32,6 +32,7 @@ PARAMS.effectMultiStrength = [1]; % Can be multiple values
 % Display Parameters
 PARAMS.maxSizeCDF = 200; % maximum number of points on the cdf
 PARAMS.binSize = 0:1:200; % bin size for the ecdf => if force binning of ecdf
+PARAMS.axis = [0 100 0 1];
 
 % File import
 % fileToOpen = uipickfiles('Prompt','Please, select the correct file to analyse (example: sox2_C_subdiv_L_corrected_nodb_noDl.ims)');
@@ -46,7 +47,7 @@ end
 
 function mainBodyFunctions(dataFile,PARAMS)
 
-close all
+% close all
 
 [PARAMS.path,PARAMS.name,ext] = fileparts(dataFile);
 PARAMS.path = [PARAMS.path, filesep];
