@@ -22,7 +22,7 @@ PARAMS.effectRangeU = 'µm';
 % x = inputdlg('Enter space-separated numbers:',...
 %     'Sample', [1 50]);
 % PARAMS.effectMultiStrength = str2num(x{:}); % Can be multiple values
-PARAMS.effectMultiStrength = [0.5 1 2]; % Can be multiple values
+PARAMS.effectMultiStrength = [1]; % Can be multiple values
 
 % if effect is > 1 => it increases the probability of the neighbours to be
 % selected => Attraction
@@ -31,7 +31,7 @@ PARAMS.effectMultiStrength = [0.5 1 2]; % Can be multiple values
 
 % Display Parameters
 PARAMS.maxSizeCDF = 200; % maximum number of points on the cdf
-PARAMS.binSize = 0:0.1:14; % bin size for the ecdf => if force binning of ecdf
+PARAMS.binSize = 0:1:200; % bin size for the ecdf => if force binning of ecdf
 
 % File import
 % fileToOpen = uipickfiles('Prompt','Please, select the correct file to analyse (example: sox2_C_subdiv_L_corrected_nodb_noDl.ims)');
@@ -125,24 +125,23 @@ dataCombined.effectStrength = PARAMS.effectStrength;
 dataCombined.effectRange = PARAMS.effectRange;
 dataCombined.effectRangeU = PARAMS.effectRangeU;
 
-
 % Point pattern analysis Type 2 effect on Type 2 in Type 1+2 (first neighbor)
-%     pops.popSource = 2;
-%     pops.popTarget = 2;
-%     pops.popPermut = [1 2];
-%     tAnalysis = sprintf('t%dvst%d',pops.popSource,pops.popTarget);
-%     fullPath = [path, name, '_', tAnalysis];
-%     fprintf('\nRunning analysis %s\n',tAnalysis);
-%     dataCombined.(tAnalysis) = pointPatternFNNAnalysis(fullPath, NNExp, pops, PARAMS);
+pops.popSource = 2;
+pops.popTarget = 2;
+pops.popPermut = [1 2];
+tAnalysis = sprintf('t%dvst%d',pops.popSource,pops.popTarget);
+fullPath = [PARAMS.path, PARAMS.name, '_', tAnalysis];
+fprintf('\nRunning analysis %s\n',tAnalysis);
+dataCombined.(tAnalysis) = pointPatternFNNAnalysis(fullPath, NNExp, pops, PARAMS);
 
 % Point pattern analysis Type 3 effect on type 3 in Type 1+2+3 (first neighbor)
-%     pops.popSource = 3;
-%     pops.popTarget = 3;
-%     pops.popPermut = [1 2 3];
-%     tAnalysis = sprintf('t%dvst%d',pops.popSource,pops.popTarget);
-%     fullPath = [path, name, '_', tAnalysis];
-%     fprintf('\nRunning analysis %s\n',tAnalysis);
-%     dataCombined.(tAnalysis) = pointPatternFNNAnalysis(fullPath, NNExp, pops, PARAMS);
+pops.popSource = 3;
+pops.popTarget = 3;
+pops.popPermut = [1 2 3];
+tAnalysis = sprintf('t%dvst%d',pops.popSource,pops.popTarget);
+fullPath = [PARAMS.path, PARAMS.name, '_', tAnalysis];
+fprintf('\nRunning analysis %s\n',tAnalysis);
+dataCombined.(tAnalysis) = pointPatternFNNAnalysis(fullPath, NNExp, pops, PARAMS);
 
 % Point pattern analysis Type 3 effect on type 2 in Type 1+2 (first neighbor)
 pops.popSource = 3;

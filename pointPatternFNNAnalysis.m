@@ -44,11 +44,6 @@ end
 % Find nearest neighbour
 dnExp = findNN(popSource3Dpos, popTarget3Dpos, samePop, pops)';
 
-% % calculate the cdf by hand... consider using ecdf for proper method
-% for i = 1:size(r,2)
-%     GExp(i) = size(dnExp(dnExp<=r(i)),2)/size(dnExp,2);
-% end
-
 % Display experimental populations cells
 % figure
 % hold on
@@ -65,6 +60,11 @@ dnExp = findNN(popSource3Dpos, popTarget3Dpos, samePop, pops)';
 
 %% Calculate exp and simulations cdf and their dispersions individualy
 [expCDFs, simuCDFs] = formatCdfs(dnExp, dnSimu, nTarget, PARAMS);
+
+% % calculate the cdf by hand... consider using ecdf for proper method
+% for i = 1:size(r,2)
+%     GExp(i) = size(dnExp(dnExp<=r(i)),2)/size(dnExp,2);
+% end
 
 %% Display all the CDFs
 figure
@@ -263,22 +263,38 @@ function [expCDFs, simuCDFs] = formatCdfs(dnExp, dnSimu, nTarget, PARAMS)
 [~,~,expCDFs.fLo1,expCDFs.fUp1] = ecdf(dnExp,'alpha',0.01);
 
 % Calculate the CDFs of the simulated populations
-
-% clear fSimuLo1 fSimuUp1 fSimuLo5 fSimuUp5 xSimu fSimu
-simuCDFs.fs = zeros(nTarget+1,PARAMS.numPermut);
-simuCDFs.xs = zeros(nTarget+1,PARAMS.numPermut);
-simuCDFs.fsLo5 = zeros(nTarget+1,PARAMS.numPermut);
-simuCDFs.fsUp5 = zeros(nTarget+1,PARAMS.numPermut);
-simuCDFs.fsLo1 = zeros(nTarget+1,PARAMS.numPermut);
-simuCDFs.fsUp1 = zeros(nTarget+1,PARAMS.numPermut);
 for simu = 1:PARAMS.numPermut % each simulation is treated individually
     % ERROR: Sometimes if popSource = popTarget, the nearest neighbour are
     % symetrical and return the same distance => are counted as one step in the
     % cdf of twice the size which messes up the number of positions => error in
     % table and error in averaging
-    [simuCDFs.fs(:,simu),simuCDFs.xs(:,simu),simuCDFs.fsLo5(:,simu),simuCDFs.fsUp5(:,simu)] = ecdf(dnSimu(:,simu),'alpha',0.05);
-    [~,~,simuCDFs.fsLo1(:,simu),simuCDFs.fsUp1(:,simu)] = ecdf(dnSimu(:,simu),'alpha',0.01);
+    [simuCDFs.indiv{simu}.f,simuCDFs.indiv{simu}.x,simuCDFs.indiv{simu}.fsLo5,simuCDFs.indiv{simu}.fsUp5] = ...
+        ecdf(dnSimu(:,simu),'alpha',0.05);
+    [~,~,simuCDFs.indiv{simu}.fsLo1,simuCDFs.indiv{simu}.fsUp1] = ecdf(dnSimu(:,simu),'alpha',0.01);
+    
+    
+    % In order to avoid dimension mismatch, cdfs are interpolated on fixed
+    % abscissa with fixed periodicity before being merged together
+    simuCDFs.xs(:,simu) = PARAMS.binSize;
+    simuCDFs.fs(:,simu) = interp1([0;unique(simuCDFs.indiv{simu}.x)],...
+        simuCDFs.indiv{simu}.f,PARAMS.binSize);
+    simuCDFs.fsLo5(:,simu) = interp1([0;unique(simuCDFs.indiv{simu}.x)],...
+         simuCDFs.indiv{simu}.fsLo5,PARAMS.binSize);
+    simuCDFs.fsUp5(:,simu) = interp1([0;unique(simuCDFs.indiv{simu}.x)],...
+        simuCDFs.indiv{simu}.fsUp5,PARAMS.binSize);
+    simuCDFs.fsLo1(:,simu) = interp1([0;unique(simuCDFs.indiv{simu}.x)],...
+        simuCDFs.indiv{simu}.fsLo1,PARAMS.binSize);
+    simuCDFs.fsUp1(:,simu) = interp1([0;unique(simuCDFs.indiv{simu}.x)],...
+        simuCDFs.indiv{simu}.fsUp1,PARAMS.binSize);
 end
+
+% Switch NaNs for 1 (for high values of x, the interpolation returns NaN
+% when there are no available values
+simuCDFs.fs(isnan(simuCDFs.fs)) = 1;
+% simuCDFs.fLo5 = 1 % ENVELOPES SHOULD NOT BE SUBJECT TO THE SAME SWITCH !!!
+% simuCDFs.fUp5 = 1 % ENVELOPES SHOULD NOT BE SUBJECT TO THE SAME SWITCH !!!
+% simuCDFs.fLo1 = 1 % ENVELOPES SHOULD NOT BE SUBJECT TO THE SAME SWITCH !!!
+% simuCDFs.fUp1 = 1 % ENVELOPES SHOULD NOT BE SUBJECT TO THE SAME SWITCH !!!
 
 % Calculate the average simulation
 simuCDFs.f = mean(simuCDFs.fs,2);
@@ -307,7 +323,6 @@ h(3) = plot(expCDFs.x,expCDFs.fLo1,'--','linewidth',1,'Color',colors(2,:));
 plot(expCDFs.x,expCDFs.fUp1,'--','linewidth',1,'Color',colors(2,:));
 
 % Plot the simulation dispersions
-
 h(4) = plot(simuCDFs.x,simuCDFs.f,'linewidth',2,'color',colors(1,1:3));
 h(5) = plot(simuCDFs.x,simuCDFs.fLo5,'linewidth',1,'color',colors(1,:));
 plot(simuCDFs.x,simuCDFs.fUp5,'linewidth',1,'color',colors(1,:));
@@ -318,7 +333,7 @@ text(0.5,0.95,'95% and 99% intervals')
 text(0.5,0.9,[num2str(PARAMS.numPermut),' random perm.'])
 
 % force the axes
-axis([0 30 0 1]);
+axis([0 150 0 1]);
 
 % display legend
 legend(h,{'Experimental data','95% enveloppe','99% enveloppe', ...
