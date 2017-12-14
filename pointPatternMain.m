@@ -10,7 +10,7 @@ PARAMS = {};
 PARAMS.version = 'version0p1p1';
 PARAMS.dispDistrib_1 = 0;
 PARAMS.dispDensityMap_2 = 0;
-PARAMS.numPermut = 50;
+PARAMS.numPermut = 10;
 
 % Type of effect of a cell on its nearest neighbours can only be 'None',
 % 'Repulsion', 'Attraction'
@@ -102,12 +102,12 @@ end
 
 save([PARAMS.path,PARAMS.name,PARAMS.brainPart,'_allModels'],'dataCombinedModels');
 
-% if numel(modelTypes)
-%     % Display (and save) all the cdfs overlayed? per type of analysis?
-%     % (=> still gonna give 3analType*3brainPart / sample)
-%     % => Adapt Combine and compare ? Only the display part ?
-%     % => Just copy and modify it ? keep the KS tests ?
-% end
+if numel(PARAMS.effectMultiStrength) > 1
+    displayModelSerie(dataCombinedModels, PARAMS);
+    % (=> still gonna give 3analType*3brainPart / sample)
+    % => Adapt Combine and compare ? Only the display part ?
+    % => Just copy and modify it ? keep the KS tests ?
+end
 end
 
 function dataCombined = mainPPA(S, d123_1, x, y, z, PARAMS)
