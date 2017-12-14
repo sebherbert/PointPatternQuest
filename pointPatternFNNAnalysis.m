@@ -62,8 +62,10 @@ dnExp = findNN(popSource3Dpos, popTarget3Dpos, samePop, pops)';
 [expCDFs, simuCDFs] = formatCdfs(dnExp, dnSimu, nTarget, PARAMS);
 
 %% Display all the CDFs
-figure
-displayCDFs(expCDFs, simuCDFs, PARAMS)
+if PARAMS.displayIndivCDF
+    figure
+    displayCDFs(expCDFs, simuCDFs, PARAMS)
+end
 
 % % 
 % % figure

@@ -10,19 +10,23 @@ PARAMS = {};
 PARAMS.version = 'version0p1p1';
 PARAMS.dispDistrib_1 = 0;
 PARAMS.dispDensityMap_2 = 0;
-PARAMS.numPermut = 10;
+PARAMS.numPermut = 200;
+
+PARAMS.displayIndivCDF = 0; % => To display individual cdf vs model figures
 
 % Type of effect of a cell on its nearest neighbours can only be 'None',
 % 'Repulsion', 'Attraction'
 % Distance of effect of a cell on its neighbours
-PARAMS.effectRange = 10;
+% PARAMS.effectRange = 10;
+PARAMS.effectMultiRange = [5 10 20 40];
+
 PARAMS.effectRangeU = 'µm';
 
 % Strength of the effect of a cell on its neighbours
 % x = inputdlg('Enter space-separated numbers:',...
 %     'Sample', [1 50]);
 % PARAMS.effectMultiStrength = str2num(x{:}); % Can be multiple values
-PARAMS.effectMultiStrength = [0.5 1 2]; % Can be multiple values
+PARAMS.effectMultiStrength = [0.25 0.5 1 2 4]; % Can be multiple values
 
 % if effect is > 1 => it increases the probability of the neighbours to be
 % selected => Attraction
@@ -81,33 +85,43 @@ dataCombinedModels.brainPart = PARAMS.brainPart;
 disp(PARAMS.name);
 load([PARAMS.path,PARAMS.name,ext]);
 
-for modelTypes = 1:numel(PARAMS.effectMultiStrength) % => Do the same for range ?
-    PARAMS.effectStrength = PARAMS.effectMultiStrength(modelTypes);
-    if PARAMS.effectStrength > 1
-        PARAMS.effectType = 'Attraction';
-    elseif PARAMS.effectStrength < 1
-        PARAMS.effectType = 'Repulsion';
-    else
-        PARAMS.effectType = 'None';
+for modelR = 1:numel(PARAMS.effectMultiRange)
+    % For every range tested
+    PARAMS.effectRange = PARAMS.effectMultiRange(modelR);
+
+    for modelS = 1:numel(PARAMS.effectMultiStrength)
+        % For every strength tested
+        PARAMS.effectStrength = PARAMS.effectMultiStrength(modelS);
+        
+        if PARAMS.effectStrength > 1
+            PARAMS.effectType = 'Attraction';
+        elseif PARAMS.effectStrength < 1
+            PARAMS.effectType = 'Repulsion';
+        else
+            PARAMS.effectType = 'None';
+        end
+        
+        % Change the model type into a model name for output
+        tempRange = regexprep(num2str(PARAMS.effectRange),'\.','p');
+        tempStrength = regexprep(num2str(PARAMS.effectStrength),'\.','p');
+        PARAMS.model = sprintf('Model_T%s_R%s_S%s',PARAMS.effectType(1),...
+            tempRange,tempStrength);
+        fprintf('\nProcessing model %s\n',PARAMS.model);
+        dataCombinedModels.(PARAMS.model) = mainPPA(S, d123_1, x, y, z, PARAMS);
     end
     
-    % Change the model type into a model name for output
-    tempRange = regexprep(num2str(PARAMS.effectRange),'\.','p');
-    tempStrength = regexprep(num2str(PARAMS.effectStrength),'\.','p');
-    PARAMS.model = sprintf('Model_T%s_R%s_S%s',PARAMS.effectType(1),...
-        tempRange,tempStrength);
-    fprintf('\nProcessing model %s\n',PARAMS.model);
-    dataCombinedModels.(PARAMS.model) = mainPPA(S, d123_1, x, y, z, PARAMS);
+    save([PARAMS.path,PARAMS.name,PARAMS.brainPart,'_allModels'],'dataCombinedModels');
+    
 end
 
-save([PARAMS.path,PARAMS.name,PARAMS.brainPart,'_allModels'],'dataCombinedModels');
-
-if numel(PARAMS.effectMultiStrength) > 1
+if numel(PARAMS.effectMultiStrength)*numel(PARAMS.effectMultiRange) > 1
     displayModelSerie(dataCombinedModels, PARAMS);
     % (=> still gonna give 3analType*3brainPart / sample)
     % => Adapt Combine and compare ? Only the display part ?
     % => Just copy and modify it ? keep the KS tests ?
 end
+
+
 end
 
 function dataCombined = mainPPA(S, d123_1, x, y, z, PARAMS)
