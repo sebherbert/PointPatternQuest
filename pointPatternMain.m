@@ -10,7 +10,7 @@ PARAMS = {};
 PARAMS.version = 'version0p1p1';
 PARAMS.dispDistrib_1 = 0;
 PARAMS.dispDensityMap_2 = 0;
-PARAMS.numPermut = 200;
+PARAMS.numPermut = 50;
 
 % Type of effect of a cell on its nearest neighbours can only be 'None',
 % 'Repulsion', 'Attraction'
@@ -22,12 +22,14 @@ PARAMS.effectRangeU = 'µm';
 % x = inputdlg('Enter space-separated numbers:',...
 %     'Sample', [1 50]);
 % PARAMS.effectMultiStrength = str2num(x{:}); % Can be multiple values
-PARAMS.effectMultiStrength = [1]; % Can be multiple values
+PARAMS.effectMultiStrength = [0.5 1 2]; % Can be multiple values
 
 % if effect is > 1 => it increases the probability of the neighbours to be
 % selected => Attraction
-% if effect is > 1 => it increases the probability of the neighbours to be
+% if effect is < 1 => it decreases the probability of the neighbours to be
 % selected => Repulsion
+% if effect is = 1 => it doesn't affect the probability of the neighbours to be
+% selected => No effect
 
 % Display Parameters
 PARAMS.maxSizeCDF = 200; % maximum number of points on the cdf
@@ -47,7 +49,7 @@ end
 
 function mainBodyFunctions(dataFile,PARAMS)
 
-% close all
+close all
 
 [PARAMS.path,PARAMS.name,ext] = fileparts(dataFile);
 PARAMS.path = [PARAMS.path, filesep];
@@ -94,6 +96,7 @@ for modelTypes = 1:numel(PARAMS.effectMultiStrength) % => Do the same for range 
     tempStrength = regexprep(num2str(PARAMS.effectStrength),'\.','p');
     PARAMS.model = sprintf('Model_T%s_R%s_S%s',PARAMS.effectType(1),...
         tempRange,tempStrength);
+    fprintf('\nProcessing model %s\n',PARAMS.model);
     dataCombinedModels.(PARAMS.model) = mainPPA(S, d123_1, x, y, z, PARAMS);
 end
 
@@ -132,7 +135,7 @@ pops.popTarget = 2;
 pops.popPermut = [1 2];
 tAnalysis = sprintf('t%dvst%d',pops.popSource,pops.popTarget);
 fullPath = [PARAMS.path, PARAMS.name, '_', tAnalysis];
-fprintf('\nRunning analysis %s\n',tAnalysis);
+fprintf('Running analysis %s\n',tAnalysis);
 dataCombined.(tAnalysis) = pointPatternFNNAnalysis(fullPath, NNExp, pops, PARAMS);
 
 % Point pattern analysis Type 3 effect on type 3 in Type 1+2+3 (first neighbor)
@@ -141,7 +144,7 @@ pops.popTarget = 3;
 pops.popPermut = [1 2 3];
 tAnalysis = sprintf('t%dvst%d',pops.popSource,pops.popTarget);
 fullPath = [PARAMS.path, PARAMS.name, '_', tAnalysis];
-fprintf('\nRunning analysis %s\n',tAnalysis);
+fprintf('Running analysis %s\n',tAnalysis);
 dataCombined.(tAnalysis) = pointPatternFNNAnalysis(fullPath, NNExp, pops, PARAMS);
 
 % Point pattern analysis Type 3 effect on type 2 in Type 1+2 (first neighbor)
@@ -150,7 +153,7 @@ pops.popTarget = 2;
 pops.popPermut = [1 2];
 tAnalysis = sprintf('t%dvst%d',pops.popSource,pops.popTarget);
 fullPath = [PARAMS.path, PARAMS.name, '_', tAnalysis];
-fprintf('\nRunning analysis %s\n',tAnalysis);
+fprintf('Running analysis %s\n',tAnalysis);
 dataCombined.(tAnalysis) = pointPatternFNNAnalysis(fullPath, NNExp, pops, PARAMS);
 
 save([PARAMS.path,PARAMS.name,PARAMS.brainPart,'_',PARAMS.model],'dataCombined');

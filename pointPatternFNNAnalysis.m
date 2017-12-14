@@ -56,15 +56,10 @@ dnExp = findNN(popSource3Dpos, popTarget3Dpos, samePop, pops)';
 
 
 %% Effectuate the simulations of the random permutations of the popTarget
-[dnSimu, ~] = randomPerm(NNExp, pops, rowPermut, samePop, nTarget, PARAMS);
+[dnSimu, ~] = simulateSpatialDisp(NNExp, pops, rowPermut, samePop, nTarget, PARAMS);
 
 %% Calculate exp and simulations cdf and their dispersions individualy
 [expCDFs, simuCDFs] = formatCdfs(dnExp, dnSimu, nTarget, PARAMS);
-
-% % calculate the cdf by hand... consider using ecdf for proper method
-% for i = 1:size(r,2)
-%     GExp(i) = size(dnExp(dnExp<=r(i)),2)/size(dnExp,2);
-% end
 
 %% Display all the CDFs
 figure
@@ -130,8 +125,8 @@ end
 function dn = findNN(popSource3Dpos, popTarget3Dpos, samePop, pops)
 % Recreate the distance table of the 2 cell populations (all neighbours)
 % sorted by size and only takes into account the firsts 2 distances
-allN = pdist2(popSource3Dpos,popTarget3Dpos,'euclidean','Smallest', 2);
 
+allN = pdist2(popSource3Dpos,popTarget3Dpos,'euclidean','Smallest', 2);
 % extract the nearest neighbour distance
 if samePop
     % When the target and source are the same then the minimum distance is always 0
@@ -146,7 +141,7 @@ end
 
 end
 
-function [dnSimu, Grand] = randomPerm(NNExp, pops, rowPermut, samePop, nTarget, PARAMS)
+function [dnSimu, Grand] = simulateSpatialDisp(NNExp, pops, rowPermut, samePop, nTarget, PARAMS)
 % Simulates random draws of the popTarget population among the popPermut
 % population, considering the effect of the popSource population on the
 % next draw.
@@ -177,25 +172,12 @@ for perm = 1:PARAMS.numPermut % for each permutation run
             probMap(tempCell.cellID) = 0;
             
             % Adapt the probability map of the other cells based on the draw.
-            if strcmp(PARAMS.effectType,'Repulsion')
-                fprintf('ERROR: Spatial effect not ready%s\n', PARAMS.effectType);
-                % Change cell draw probability in the surroundings of the drawned cell
-                % for each cell around 
-                % probMap(cellAround) = probMap(cellAround)/PARAMS.effectInt
-                probMap = adaptProbMap(sourceCells, ProbMap, PARAMS);
-                
-            elseif strcmp(PARAMS.effectType,'Attraction')
-                fprintf('ERROR: Spatial effect not ready%s\n', PARAMS.effectType);
-                probMap = sum(NNExp.cellType == pops.popPermut,2); % TBChanged !
-            elseif ~strcmp(PARAMS.effectType,'None')
-                fprintf('ERROR: Unknown spatial effect %s\n', PARAMS.effectType);
-                break
-            end
-            
+            probMap = adaptProbMap(tempCell.cellID, probMap, cell2CellDist, PARAMS);
+
+         
             % Add the drawn cell to the complete simulated draw
             popTargetSimu{perm} = [popTargetSimu{perm};tempCell];
         end
-        
         % In this case target and source populations are the same
         popSourceSimu{perm} = popTargetSimu{perm};
         
@@ -206,15 +188,7 @@ for perm = 1:PARAMS.numPermut % for each permutation run
         
         % extract source cells IDs 
         sourceCells = table2array(NNExp(NNExp.cellType == pops.popSource, {'cellID'}));            
-        
-        if strcmp(PARAMS.effectType,'Repulsion')
-            probMap = adaptProbMap(sourceCells, probMap, cell2CellDist, PARAMS);
-        elseif strcmp(PARAMS.effectType,'Attraction')
-            probMap = adaptProbMap(sourceCells, probMap, cell2CellDist, PARAMS);
-        elseif ~strcmp(PARAMS.effectType,'None')
-            fprintf('ERROR: Unknown spatial effect %s\n', PARAMS.effectType);
-            break
-        end
+        probMap = adaptProbMap(sourceCells, probMap, cell2CellDist, PARAMS);
         
         % Then make a single draw without replacing the cells
         popTargetSimu{perm} = datasample(NNExp,nTarget,'Replace',false,'Weights',probMap);
@@ -361,7 +335,8 @@ axis(PARAMS.axis);
 
 % display legend
 legend(h,{'Experimental data','95% enveloppe','99% enveloppe', ...
-    'Simulated data','95% enveloppe','99% enveloppe'},'Location','southeast');
+    regexprep(sprintf('Simulated data (%s)',PARAMS.model),'_',' '),'95% enveloppe',...
+    '99% enveloppe'},'Location','southeast');
 legend boxoff;
 
 end
