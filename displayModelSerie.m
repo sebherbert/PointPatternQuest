@@ -33,18 +33,18 @@ for dispTest = 1:numel(dispTests)
     hold on
 
     % Prepare figure colors for each model
-    colors = [jet(numel(models)+1) ones(numel(models)+1,1)*0.25];   
+    %     colors = [jet(numel(models)+1) ones(numel(models)+1,1)*0.25];
     
     % use first model to extract the experimental data
     currentData = dataCombinedModels.(models{1}).(dispTests{dispTest});
-    %     colors = [lines(2) ones(2,1)*0.25]; % => Keep the 2nd default color for
+    colors = [lines(2) ones(2,1)*0.25]; % => Keep the 2nd default color for
     % the experimental dataset   
     h(length(h)+1) = displayIndivCDF(currentData.expCDFs.x,currentData.expCDFs.f,...
         colors(2,:),currentData.expCDFs.f5,currentData.expCDFs.f95,'.-');
     legs{1} = 'Experimental data';
     % Prepare figure colors for each model
-    colors(2,:) = [];
-    %     colors = [winter(numel(models)) ones(numel(models),1)*0.25];
+    %     colors(2,:) = [];
+    colors = [winter(numel(models)) ones(numel(models),1)*0.25];
     % Loop the display of the modeled and experimental CDFs
     for model = 1:numel(models)
         currentData = dataCombinedModels.(models{model}).(dispTests{dispTest});

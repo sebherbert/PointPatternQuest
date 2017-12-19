@@ -18,7 +18,7 @@ PARAMS.displayIndivCDF = 0; % => To display individual cdf vs model figures
 % 'Repulsion', 'Attraction'
 % Distance of effect of a cell on its neighbours
 % PARAMS.effectRange = 10;
-PARAMS.effectMultiRange = [5 10 20 40];
+PARAMS.effectMultiRange = [40];
 
 PARAMS.effectRangeU = 'µm';
 
@@ -37,13 +37,13 @@ PARAMS.effectMultiStrength = [0.25 0.5 1 2 4]; % Can be multiple values
 
 % Display Parameters
 PARAMS.maxSizeCDF = 200; % maximum number of points on the cdf
-PARAMS.binSize = 0:1:200; % bin size for the ecdf => if force binning of ecdf
+PARAMS.binSize = 0:0.1:200; % bin size for the ecdf => if force binning of ecdf
 PARAMS.axis = [0 100 0 1];
 
 % File import
-% fileToOpen = uipickfiles('Prompt','Please, select the correct file to analyse (example: sox2_C_subdiv_L_corrected_nodb_noDl.ims)');
+fileToOpen = uipickfiles('Prompt','Please, select the correct file to analyse (example: sox2_C_subdiv_L_corrected_nodb_noDl_xyzCASE1.mat)');
 % for development purposes only
-fileToOpen = {'/media/sherbert/Data/Projects/OG_projects/Project6_ND_distribPattern/static_/preAnalysis_and_ims/sox2_C_subdiv_L_corrected_nodb_noDl_xyzCASE1.mat'};
+% fileToOpen = {'/media/sherbert/Data/Projects/OG_projects/Project6_ND_distribPattern/static_/preAnalysis_and_ims/sox2_C_subdiv_L_corrected_nodb_noDl_xyzCASE1.mat'};
 
 for fileOfInterest = 1:length(fileToOpen)
     mainBodyFunctions(fileToOpen{fileOfInterest},PARAMS);
@@ -59,6 +59,8 @@ close all
 PARAMS.path = [PARAMS.path, filesep];
 filename = [PARAMS.name,ext];
 
+cd(PARAMS.path)
+
 % find which part of the brain is studied
 % regexp => single digit following the '_xyzCASE' string
 k = str2double(regexp(PARAMS.name, '(?<=_xyzCASE)[0-9]','match'));
@@ -72,7 +74,7 @@ switch k
     case 4
         PARAMS.brainPart = '_dm';
     otherwise
-        warning('Unexpected part of he brain. Stopping the analysis');
+        warning('Unexpected part of the brain. Stopping the analysis');
         return
 end
 fprintf('Analysing the part of the brain: %s (case %d)\n',PARAMS.brainPart,k);
