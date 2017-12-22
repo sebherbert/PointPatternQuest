@@ -43,33 +43,64 @@ end
 % Find nearest neighbour
 dnExp = findNN(popSource3Dpos, popTarget3Dpos, PARAMS.samePop, pops)';
 
-%% Effectuate the simulations of the random permutations of the popTarget
-effect.Strength = PARAMS.effectStrength;
-effect.Range = PARAMS.effectRange;
-[dnSimu, ~] = simulateSpatialDisp(effect, NNExp, pops, rowPermut, nTarget, PARAMS);
-
-%% Calculate exp and simulations cdf and their dispersions individualy
-[expCDFs, simuCDFs] = formatCdfs(dnExp, dnSimu, PARAMS);
-
-%% Display all the CDFs
-if PARAMS.displayIndivCDF
-    figure
-    displayCDFs(expCDFs, simuCDFs, PARAMS)
-end
+% Interpolate the CDF on a fixed scale and estimate the envelopes
+expCDFs = formatCdfsExp(dnExp, PARAMS);
 
 %% Use an optimisation function to find the most adapted strength and range parameters 
 if PARAMS.optimizePar
     bestParams = optimizeParamsCall(NNExp, pops, rowPermut, nTarget, dnExp, expCDFs,...
         PARAMS);
     fprintf('bestParams: Range = %0.1fµm ; Strength = %0.2f\n',bestParams(1),bestParams(2));
+    
+    % Use the optimized values to recalculate the simulation
+    effect.Range(1) = bestParams(1);
+    effect.Strength = bestParams(2);
+    [dnSimu, ~] = simulateSpatialDisp(effect, NNExp, pops, rowPermut, nTarget, PARAMS);
+    
+    simuCDFs = formatCdfsSimu(dnSimu, PARAMS);   
+    % Display simulation + experimental
+    figure
+    displayCDFs(expCDFs, simuCDFs, PARAMS);
+    
+    % recalculate RMS and GOF
+    diffCdf = expCDFs.fFix' - simuCDFs.f50pc;
+    diffCdf(isnan(diffCdf)) = 0;
+    medRMS = median(rms(diffCdf));
+    text(60,0.5,sprintf('Fitted parameters:\nRange = %0.1fµm\nStrength = %0.2f\nRMS = %0.04f',...
+        bestParams(1),bestParams(2),medRMS));
+    saveas(gcf,sprintf('%s_fitted model', fullPath));
+    saveas(gcf,sprintf('%s_fitted model.png', fullPath));
+
+else % Use preset values
+    %% Effectuate the simulations of the random permutations of the popTarget
+    effect.Strength = PARAMS.effectStrength;
+    effect.Range = PARAMS.effectRange;
+    [dnSimu, ~] = simulateSpatialDisp(effect, NNExp, pops, rowPermut, nTarget, PARAMS);
+    
+    %% Calculate exp and simulations cdf and their dispersions individualy
+    simuCDFs = formatCdfsSimu(dnSimu, PARAMS);
+    
+    %% Display all the CDFs
+    if PARAMS.displayIndivCDF
+        figure
+        displayCDFs(expCDFs, simuCDFs, PARAMS)
+    end
 end
 
+% Structure output
 fullResults = {};
 fullResults.cellDiameter = CellDiameter;
 fullResults.dnExp = dnExp;
 fullResults.expCDFs = expCDFs;
 fullResults.dnSimu = dnSimu;
 fullResults.simuCDFs = simuCDFs;
+if PARAMS.optimizePar
+    fullResults.fit.Range = bestParams(1);
+    fullResults.fit.Strength = bestParams(2);
+    fullResults.fit.Strength = bestParams(2);
+    fullResults.fit.medRMS = medRMS;
+end
+fullResults.PARAMS = PARAMS;
 
 end
 
@@ -88,39 +119,36 @@ hold on
 effect.Range = x0(1);
 effect.Strength = x0(2);
 [dnSimu, ~] = simulateSpatialDisp(effect, NNExp, pops, rowPermut, nTarget, PARAMS);
-[~, simuCDFs] = formatCdfs(dnExp, dnSimu, PARAMS);
+simuCDFs = formatCdfsSimu(dnSimu, PARAMS);
 h(2) = plot(simuCDFs.x,simuCDFs.f50pc,'linewidth',2,'Color',colors(1,:));
 
 ylabel('Cumulative cell frequency');
 xlabel('Distance to nearest neighbor (µm)');
 
-pause(1)
+pause(0.1)
 % options = optimset('PlotFcns',@optimplotfval);
+options = optimset('MaxIter',5);
 
-bestParams = fminsearch(@two_varFunc, x0, [], NNExp, pops, rowPermut, nTarget, dnExp, expCDFs, h, PARAMS);
+bestParams = fminsearch(@two_varModel, x0, options, NNExp, pops, rowPermut, nTarget, dnExp, expCDFs, h, PARAMS);
 
 end
 
 
-function [medRMS, h] = two_varFunc(x0, NNExp, pops, rowPermut, nTarget, dnExp, expCDFs, h, PARAMS)
+function [medRMS, h] = two_varModel(x0, NNExp, pops, rowPermut, nTarget, dnExp, expCDFs, h, PARAMS)
 % provide the ks test comparing the experimental and simulated
 % distributions
 
 effect.Range = x0(1);
 effect.Strength = x0(2);
 
-if (effect.Range <= 5 || effect.Strength <= 0)
+if (effect.Range <= PARAMS.minFitRange || effect.Strength <= PARAMS.minFitStrength)
     medRMS = 100;
     return
 end
 
 [dnSimu, ~] = simulateSpatialDisp(effect, NNExp, pops, rowPermut, nTarget, PARAMS);
 
-% [h,pks] = kstest2(median(sort(dnSimu,1),2),dnExp);
-
-% medRMS = rms(median(sort(dnSimu,1)-sort(dnExp)));
-
-[~, simuCDFs] = formatCdfs(dnExp, dnSimu, PARAMS);
+simuCDFs = formatCdfsSimu(dnSimu, PARAMS);
 
 diffCdf = expCDFs.fFix' - simuCDFs.f50pc;
 diffCdf(isnan(diffCdf)) = 0;
@@ -133,10 +161,6 @@ pause(0.1)
 fprintf('bestParams: Range = %0.1fµm ; Strength = %0.2f ; RMS = %0.5f\n',effect.Range,effect.Strength,medRMS);
 
 end
-
-
-
-
 
 function displayProbMap(NNExp, probMap, PARAMS)
 % Display probaMap as a colormap applied on the permutable population
@@ -186,7 +210,6 @@ dnSimu = zeros(nTarget,PARAMS.numPermut);
 % Calculate all the cell-cell distances to use in the spatial effect
 % simulation effect
 cell2CellDist = pdist2(table2array(NNExp(:,{'pos3D'})),table2array(NNExp(:,{'pos3D'})));
-
 
 for perm = 1:PARAMS.numPermut % for each permutation run
     if mod(perm,500) == 0
@@ -265,11 +288,20 @@ newProbMap = tempProbMap;
 
 end
 
-function [expCDFs, simuCDFs] = formatCdfs(dnExp, dnSimu, PARAMS)
+function expCDFs = formatCdfsExp(dnExp, PARAMS)
+% Interpolate the CDF on a fixed scale and estimate the envelopes
 
 % Calculate the CDFs of the experimental population
 [expCDFs.f,expCDFs.x,expCDFs.f5,expCDFs.f95] = ecdf(dnExp,'alpha',0.05);
 [~,~,expCDFs.f1,expCDFs.f99] = ecdf(dnExp,'alpha',0.01);
+
+% Interpolate the CDF on a fixed scale
+expCDFs.fFix = interp1([0;unique(expCDFs.x)],...
+    [0;expCDFs.f(2:end)],PARAMS.binSize);
+expCDFs.xFix = PARAMS.binSize;
+end
+
+function simuCDFs = formatCdfsSimu(dnSimu, PARAMS)
 
 %% New version using a "simpler" and more manual percentile approach (still kept 
 % Greenwood for the experimental cdf. (same process as original WS's)
@@ -283,11 +315,6 @@ for simu = 1:PARAMS.numPermut % each simulation is treated individually
     %     simuCDFs.xs(:,simu) = PARAMS.binSize;
     simuCDFs.fs(:,simu) = interp1([0;unique(simuCDFs.indiv{simu}.x)],...
         [0;simuCDFs.indiv{simu}.f(2:end)],PARAMS.binSize);
-    
-    expCDFs.fFix = interp1([0;unique(expCDFs.x)],...
-        [0;expCDFs.f(2:end)],PARAMS.binSize);
-    expCDFs.xFix = PARAMS.binSize;
-    
 end
 
 % Calculate the median simulation
@@ -331,8 +358,8 @@ plot(simuCDFs.x,simuCDFs.f95pc,'linewidth',1,'color',colors(1,:));
 h(6) = plot(simuCDFs.x,simuCDFs.f1pc,'--','linewidth',1,'color',colors(1,:));
 plot(simuCDFs.x,simuCDFs.f99pc,'--','linewidth',1,'color',colors(1,:));
 
-text(0.5,0.95,'95% and 99% intervals')
-text(0.5,0.9,[num2str(PARAMS.numPermut),' random perm.'])
+% text(0.5,0.95,'95% and 99% intervals')
+% text(0.5,0.9,[num2str(PARAMS.numPermut),' random perm.'])
 
 % force the axes
 axis(PARAMS.axis);

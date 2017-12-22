@@ -10,8 +10,15 @@ PARAMS = {};
 PARAMS.version = 'version0p1p2';
 PARAMS.dispDistrib_1 = 0;
 PARAMS.dispDensityMap_2 = 0;
-PARAMS.numPermut = 400;
+PARAMS.numPermut = 100;
+
+% Optimization parameters
 PARAMS.optimizePar = 1; % Do an automated search for the best parameters
+PARAMS.minFitRange = 5; % Minimum value for the fitted model
+PARAMS.minFitStrength = 0; % Minimum value for the fitted model
+% Original values for the optimization function
+PARAMS.optiR0 = 10; % 10µm distance
+PARAMS.optiS0 = 1; % No dispersion effect
 
 PARAMS.displayIndivCDF = 0; % => To display individual cdf vs model figures
 
@@ -35,9 +42,7 @@ PARAMS.effectMultiStrength = [1]; % Can be multiple values
 % if effect is = 1 => it doesn't affect the probability of the neighbours to be
 % selected => No effect
 
-% Original values for the optimization function
-PARAMS.optiR0 = 10; % 10µm distance
-PARAMS.optiS0 = 3; % No dispersion effect
+
 
 % Display Parameters
 PARAMS.maxSizeCDF = 200; % maximum number of points on the cdf
@@ -91,42 +96,63 @@ dataCombinedModels.brainPart = PARAMS.brainPart;
 disp(PARAMS.name);
 load([PARAMS.path,PARAMS.name,ext]);
 
-for modelR = 1:numel(PARAMS.effectMultiRange)
-    % For every range tested
-    PARAMS.effectRange = PARAMS.effectMultiRange(modelR);
+% Begin the PPA analysis for each model
+if PARAMS.optimizePar % aka if you want the fitted version
+    % Change the model type into a model name for output
+    PARAMS.model  = 'fittedModel';
+    dataCombinedModels.fittedModel = mainPPA(S, d123_1, x, y, z, PARAMS);
 
-    for modelS = 1:numel(PARAMS.effectMultiStrength)
-        % For every strength tested
-        PARAMS.effectStrength = PARAMS.effectMultiStrength(modelS);
+    dataCombined = dataCombinedModels.(PARAMS.model);
+    
+    save([PARAMS.path,PARAMS.name,PARAMS.brainPart,'_',PARAMS.model],'dataCombined');
+
+else
+    for modelR = 1:numel(PARAMS.effectMultiRange)
+        % For every range tested
+        PARAMS.effectRange = PARAMS.effectMultiRange(modelR);
         
-        if PARAMS.effectStrength > 1
-            PARAMS.effectType = 'Attraction';
-        elseif PARAMS.effectStrength < 1
-            PARAMS.effectType = 'Repulsion';
-        else
-            PARAMS.effectType = 'None';
+        for modelS = 1:numel(PARAMS.effectMultiStrength)
+            % For every strength tested
+            PARAMS.effectStrength = PARAMS.effectMultiStrength(modelS);
+            
+            if PARAMS.effectStrength > 1
+                PARAMS.effectType = 'Attraction';
+            elseif PARAMS.effectStrength < 1
+                PARAMS.effectType = 'Repulsion';
+            else
+                PARAMS.effectType = 'None';
+            end
+            
+            % Change the model type into a model name for output
+            tempRange = regexprep(num2str(PARAMS.effectRange),'\.','p');
+            tempStrength = regexprep(num2str(PARAMS.effectStrength),'\.','p');
+            PARAMS.model = sprintf('Model_T%s_R%s_S%s',PARAMS.effectType(1),...
+                tempRange,tempStrength);
+            fprintf('\nProcessing model %s\n',PARAMS.model);
+            dataCombinedModels.(PARAMS.model) = mainPPA(S, d123_1, x, y, z, PARAMS);
+            
+            dataCombinedModels.(PARAMS.model).name = PARAMS.name;
+            dataCombinedModels.(PARAMS.model).brainPart = PARAMS.brainPart;
+            dataCombinedModels.(PARAMS.model).effectType = PARAMS.effectType;
+            dataCombinedModels.(PARAMS.model).effectStrength = PARAMS.effectStrength;
+            dataCombinedModels.(PARAMS.model).effectRange = PARAMS.effectRange;
+            dataCombinedModels.(PARAMS.model).effectRangeU = PARAMS.effectRangeU;
+            
+            dataCombined = dataCombinedModels.(PARAMS.model);
+            
+            save([PARAMS.path,PARAMS.name,PARAMS.brainPart,'_',PARAMS.model],'dataCombined');            
         end
         
-        % Change the model type into a model name for output
-        tempRange = regexprep(num2str(PARAMS.effectRange),'\.','p');
-        tempStrength = regexprep(num2str(PARAMS.effectStrength),'\.','p');
-        PARAMS.model = sprintf('Model_T%s_R%s_S%s',PARAMS.effectType(1),...
-            tempRange,tempStrength);
-        fprintf('\nProcessing model %s\n',PARAMS.model);
-        dataCombinedModels.(PARAMS.model) = mainPPA(S, d123_1, x, y, z, PARAMS);
     end
     
-    save([PARAMS.path,PARAMS.name,PARAMS.brainPart,'_allModels'],'dataCombinedModels');
-    
+    if numel(PARAMS.effectMultiStrength)*numel(PARAMS.effectMultiRange) > 1
+        displayModelSerie(dataCombinedModels, PARAMS);
+        save([PARAMS.path,PARAMS.name,PARAMS.brainPart,'_allModels'],'dataCombinedModels');
+        % (=> still gonna give 3analType*3brainPart / sample)
+        % => Adapt Combine and compare ? Only the display part ?
+        % => Just copy and modify it ? keep the KS tests ?
+    end
 end
-
-if numel(PARAMS.effectMultiStrength)*numel(PARAMS.effectMultiRange) > 1
-    displayModelSerie(dataCombinedModels, PARAMS);
-    % (=> still gonna give 3analType*3brainPart / sample)
-    % => Adapt Combine and compare ? Only the display part ?
-    % => Just copy and modify it ? keep the KS tests ?
-end
-
 
 end
 
@@ -138,16 +164,6 @@ function dataCombined = mainPPA(S, d123_1, x, y, z, PARAMS)
 
 NNExp = table((1:length(S))',S',d123_1',[x,y,z]);
 NNExp.Properties.VariableNames = {'cellID','cellType','nearestNeighbour','pos3D'};
-
-% Structure smaller than the model one for simpler handling and
-% retrocompatibility
-dataCombined = {};
-dataCombined.name = PARAMS.name;
-dataCombined.brainPart = PARAMS.brainPart;
-dataCombined.effectType = PARAMS.effectType;
-dataCombined.effectStrength = PARAMS.effectStrength;
-dataCombined.effectRange = PARAMS.effectRange;
-dataCombined.effectRangeU = PARAMS.effectRangeU;
 
 % % Point pattern analysis Type 2 effect on Type 2 in Type 1+2 (first neighbor)
 % pops.popSource = 2;
@@ -175,7 +191,5 @@ tAnalysis = sprintf('t%dvst%d',pops.popSource,pops.popTarget);
 fullPath = [PARAMS.path, PARAMS.name, '_', tAnalysis];
 fprintf('Running analysis %s\n',tAnalysis);
 dataCombined.(tAnalysis) = pointPatternFNNAnalysis(fullPath, NNExp, pops, PARAMS);
-
-save([PARAMS.path,PARAMS.name,PARAMS.brainPart,'_',PARAMS.model],'dataCombined');
 
 end
