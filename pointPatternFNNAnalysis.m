@@ -33,33 +33,23 @@ popTarget3Dpos = table2array(NNExp(NNExp.cellType == pops.popTarget, {'pos3D'}))
 nTarget = length(popTarget3Dpos);
 
 rowPermut = logical(sum(NNExp.cellType == pops.popPermut,2));
-popPermut3Dpos = table2array(NNExp(rowPermut, {'pos3D'}));
 
 if pops.popTarget == pops.popSource
-    samePop = true;
+    PARAMS.samePop = true;
 else 
-    samePop = false;
+    PARAMS.samePop = false;
 end
 
 % Find nearest neighbour
-dnExp = findNN(popSource3Dpos, popTarget3Dpos, samePop, pops)';
-
-% Display experimental populations cells
-% figure
-% hold on
-% plot3(popPermut3Dpos(:,1),popPermut3Dpos(:,2),popPermut3Dpos(:,3),'o','MarkerEdgeColor',[186,212,244]/256);
-% plot3(popTarget3Dpos(:,1),popTarget3Dpos(:,2),popTarget3Dpos(:,3),'.','Color',[0.851,0.325,0.098]);
-% if samePop == false
-%     plot3(popSource3Dpos(:,1),popSource3Dpos(:,2),popSource3Dpos(:,3),'.','Color',[0,0.498,0]);
-% end
-% axis equal
-
+dnExp = findNN(popSource3Dpos, popTarget3Dpos, PARAMS.samePop, pops)';
 
 %% Effectuate the simulations of the random permutations of the popTarget
-[dnSimu, ~] = simulateSpatialDisp(NNExp, pops, rowPermut, samePop, nTarget, PARAMS);
+effect.Strength = PARAMS.effectStrength;
+effect.Range = PARAMS.effectRange;
+[dnSimu, ~] = simulateSpatialDisp(effect, NNExp, pops, rowPermut, nTarget, PARAMS);
 
 %% Calculate exp and simulations cdf and their dispersions individualy
-[expCDFs, simuCDFs] = formatCdfs(dnExp, dnSimu, nTarget, PARAMS);
+[expCDFs, simuCDFs] = formatCdfs(dnExp, dnSimu, PARAMS);
 
 %% Display all the CDFs
 if PARAMS.displayIndivCDF
@@ -67,43 +57,86 @@ if PARAMS.displayIndivCDF
     displayCDFs(expCDFs, simuCDFs, PARAMS)
 end
 
-% % 
-% % figure
-% % for simu = 1:PARAMS.numPermut % each simulation is treated individually
-% %     subplot(2,3,simu)
-% %     hold on
-% %     [fSimu(:,simu),xSimu(:,simu),fSimuLo5(:,simu),fSimuUp5(:,simu)] = ecdf(dnSimu(:,simu),'alpha',0.05);
-% %     [~,~,fSimuLo1(:,simu),fSimuUp1(:,simu)] = ecdf(dnSimu(:,simu),'alpha',0.01);
-% %     plot(xSimu(:,simu),fSimu(:,simu),'.-');
-% %     plot(xSimu(:,simu),fSimuLo5(:,simu), '.--');
-% %     plot(xSimu(:,simu),fSimuUp5(:,simu), '.--');
-% % end
-% 
-% % 
-% % subplot(2,3,6)
-% % plot(xSimus,fSimus,'.-');
-% % hold on
-% % plot(xSimus,[fSimusLo5 fSimusUp5], '.--');
-% 
-% 8.0
-% % Display figure
-% figTitle = ['Type II (random permutations in I and II) CellDiameter=',num2str(CellDiameter,2),'{\mu}m'];
-% figSavePath = [path,name,'Case',num2str(k),'_Analysis03Fig1'];
-% 
-% GrandCdf = displaySimuPPQ(Grand, GExp, figTitle, figSavePath, PARAMS);
-% 
-% save([path,name,'Case',num2str(k),'_Analysis03NN'],'dnExp','GExp','r','Grand','GrandCdf');
-% 
+%% Use an optimisation function to find the most adapted strength and range parameters 
+if PARAMS.optimizePar
+    bestParams = optimizeParamsCall(NNExp, pops, rowPermut, nTarget, dnExp, expCDFs,...
+        PARAMS);
+    fprintf('bestParams: Range = %0.1fµm ; Strength = %0.2f\n',bestParams(1),bestParams(2));
+end
+
 fullResults = {};
 fullResults.cellDiameter = CellDiameter;
 fullResults.dnExp = dnExp;
 fullResults.expCDFs = expCDFs;
 fullResults.dnSimu = dnSimu;
 fullResults.simuCDFs = simuCDFs;
-% fullResults.GExp = GExp;
-% fullResults.GrandCdf = GrandCdf;
 
 end
+
+function bestParams = optimizeParamsCall(NNExp, pops, rowPermut, nTarget, dnExp, expCDFs, PARAMS)
+% Launch the optimization function for the fit of the strength of range of
+% the distribution effect
+x0 = [PARAMS.optiR0,PARAMS.optiS0];
+
+% Display the background image (exp value)
+colors = lines(2);
+
+figure
+h(1) = plot(expCDFs.x,expCDFs.f,'linewidth',2,'Color',colors(2,:));
+hold on
+
+effect.Range = x0(1);
+effect.Strength = x0(2);
+[dnSimu, ~] = simulateSpatialDisp(effect, NNExp, pops, rowPermut, nTarget, PARAMS);
+[~, simuCDFs] = formatCdfs(dnExp, dnSimu, PARAMS);
+h(2) = plot(simuCDFs.x,simuCDFs.f50pc,'linewidth',2,'Color',colors(1,:));
+
+ylabel('Cumulative cell frequency');
+xlabel('Distance to nearest neighbor (µm)');
+
+pause(1)
+% options = optimset('PlotFcns',@optimplotfval);
+
+bestParams = fminsearch(@two_varFunc, x0, [], NNExp, pops, rowPermut, nTarget, dnExp, expCDFs, h, PARAMS);
+
+end
+
+
+function [medRMS, h] = two_varFunc(x0, NNExp, pops, rowPermut, nTarget, dnExp, expCDFs, h, PARAMS)
+% provide the ks test comparing the experimental and simulated
+% distributions
+
+effect.Range = x0(1);
+effect.Strength = x0(2);
+
+if (effect.Range <= 5 || effect.Strength <= 0)
+    medRMS = 100;
+    return
+end
+
+[dnSimu, ~] = simulateSpatialDisp(effect, NNExp, pops, rowPermut, nTarget, PARAMS);
+
+% [h,pks] = kstest2(median(sort(dnSimu,1),2),dnExp);
+
+% medRMS = rms(median(sort(dnSimu,1)-sort(dnExp)));
+
+[~, simuCDFs] = formatCdfs(dnExp, dnSimu, PARAMS);
+
+diffCdf = expCDFs.fFix' - simuCDFs.f50pc;
+diffCdf(isnan(diffCdf)) = 0;
+medRMS = median(rms(diffCdf));
+
+% update image
+set(h(2),'YData',simuCDFs.f50pc,'Color',lines(1));
+pause(0.1)
+
+fprintf('bestParams: Range = %0.1fµm ; Strength = %0.2f ; RMS = %0.5f\n',effect.Range,effect.Strength,medRMS);
+
+end
+
+
+
+
 
 function displayProbMap(NNExp, probMap, PARAMS)
 % Display probaMap as a colormap applied on the permutable population
@@ -143,7 +176,7 @@ end
 
 end
 
-function [dnSimu, Grand] = simulateSpatialDisp(NNExp, pops, rowPermut, samePop, nTarget, PARAMS)
+function [dnSimu, Grand] = simulateSpatialDisp(effect, NNExp, pops, rowPermut, nTarget, PARAMS)
 % Simulates random draws of the popTarget population among the popPermut
 % population, considering the effect of the popSource population on the
 % next draw.
@@ -156,7 +189,7 @@ cell2CellDist = pdist2(table2array(NNExp(:,{'pos3D'})),table2array(NNExp(:,{'pos
 
 
 for perm = 1:PARAMS.numPermut % for each permutation run
-    if mod(perm,100) == 0
+    if mod(perm,500) == 0
         fprintf('Running permutation %d\n',perm);
     end
     % Initiate a probability map => prob = 1 for the permutable population and
@@ -164,7 +197,7 @@ for perm = 1:PARAMS.numPermut % for each permutation run
     probMap = double(rowPermut);
     popTargetSimu{perm} = table;
 
-    if samePop 
+    if PARAMS.samePop 
         % Requires adaptation of the popSource at every step + an adaptation at
         % every step of the draw
         for bioCell = 1:nTarget
@@ -174,7 +207,7 @@ for perm = 1:PARAMS.numPermut % for each permutation run
             probMap(tempCell.cellID) = 0;
             
             % Adapt the probability map of the other cells based on the draw.
-            probMap = adaptProbMap(tempCell.cellID, probMap, cell2CellDist, PARAMS);
+            probMap = adaptProbMap(tempCell.cellID, probMap, cell2CellDist, effect);
 
          
             % Add the drawn cell to the complete simulated draw
@@ -190,7 +223,7 @@ for perm = 1:PARAMS.numPermut % for each permutation run
         
         % extract source cells IDs 
         sourceCells = table2array(NNExp(NNExp.cellType == pops.popSource, {'cellID'}));            
-        probMap = adaptProbMap(sourceCells, probMap, cell2CellDist, PARAMS);
+        probMap = adaptProbMap(sourceCells, probMap, cell2CellDist, effect);
         
         % Then make a single draw without replacing the cells
         popTargetSimu{perm} = datasample(NNExp,nTarget,'Replace',false,'Weights',probMap);
@@ -198,7 +231,7 @@ for perm = 1:PARAMS.numPermut % for each permutation run
     end
     
     % Find the Nearest neighbours in the population
-    dnSimu(:,perm) = findNN(popSourceSimu{perm}.pos3D, popTargetSimu{perm}.pos3D, samePop, pops);
+    dnSimu(:,perm) = findNN(popSourceSimu{perm}.pos3D, popTargetSimu{perm}.pos3D, PARAMS.samePop, pops);
     
     % Calculate the cdf histogram
     for i=1:size(PARAMS.binSize,2)
@@ -208,7 +241,7 @@ end
 
 end
 
-function newProbMap = adaptProbMap(sourceCells, oriProbMap, cell2CellDist, PARAMS)
+function newProbMap = adaptProbMap(sourceCells, oriProbMap, cell2CellDist, effect)
 % Adapt the draw probability map based on the desired effect, the drawned
 % cell(s)
 % SourceCells = cellID of the source population to integrate into the
@@ -220,8 +253,8 @@ tempProbMap = oriProbMap;
 
 for bioCell = 1:length(sourceCells)
     distsN = cell2CellDist(:,sourceCells(bioCell));
-    affectedCells = distsN<PARAMS.effectRange;
-    tempProbMap(affectedCells) = tempProbMap(affectedCells)*PARAMS.effectStrength;
+    affectedCells = distsN<effect.Range;
+    tempProbMap(affectedCells) = tempProbMap(affectedCells)*effect.Strength;
 end
 
 % if later choose to change the multiplication factor by an additive term,
@@ -232,47 +265,11 @@ newProbMap = tempProbMap;
 
 end
 
-function [expCDFs, simuCDFs] = formatCdfs(dnExp, dnSimu, nTarget, PARAMS)
+function [expCDFs, simuCDFs] = formatCdfs(dnExp, dnSimu, PARAMS)
 
 % Calculate the CDFs of the experimental population
 [expCDFs.f,expCDFs.x,expCDFs.f5,expCDFs.f95] = ecdf(dnExp,'alpha',0.05);
 [~,~,expCDFs.f1,expCDFs.f99] = ecdf(dnExp,'alpha',0.01);
-
-% %% unconclusive version using the greenwood estimator of the variance for each individual cdf
-% % Calculate the CDFs of the simulated populations
-% for simu = 1:PARAMS.numPermut % each simulation is treated individually
-%     % WARNING: Sometimes if popSource = popTarget, the nearest neighbour are
-%     % symetrical and return the same distance => are counted as one step in the
-%     % cdf of twice the size which messes up the number of positions => error in
-%     % table and error in averaging, corrected by interpolation
-%     [simuCDFs.indiv{simu}.f,simuCDFs.indiv{simu}.x,simuCDFs.indiv{simu}.fsLo5,simuCDFs.indiv{simu}.fsUp5] = ...
-%         ecdf(dnSimu(:,simu),'alpha',0.05);
-%     [~,~,simuCDFs.indiv{simu}.fsLo1,simuCDFs.indiv{simu}.fsUp1] = ecdf(dnSimu(:,simu),'alpha',0.01);
-%     
-%     
-%     % In order to avoid dimension mismatch, cdfs are interpolated on fixed
-%     % abscissa with fixed periodicity before being merged together
-%     simuCDFs.xs(:,simu) = PARAMS.binSize;
-%     simuCDFs.fs(:,simu) = interp1([0;unique(simuCDFs.indiv{simu}.x)],...
-%         simuCDFs.indiv{simu}.f,PARAMS.binSize);
-%     simuCDFs.fsLo5(:,simu) = interp1([0;unique(simuCDFs.indiv{simu}.x)],...
-%          simuCDFs.indiv{simu}.fsLo5,PARAMS.binSize);
-%     simuCDFs.fsUp5(:,simu) = interp1([0;unique(simuCDFs.indiv{simu}.x)],...
-%         simuCDFs.indiv{simu}.fsUp5,PARAMS.binSize);
-%     simuCDFs.fsLo1(:,simu) = interp1([0;unique(simuCDFs.indiv{simu}.x)],...
-%         simuCDFs.indiv{simu}.fsLo1,PARAMS.binSize);
-%     simuCDFs.fsUp1(:,simu) = interp1([0;unique(simuCDFs.indiv{simu}.x)],...
-%         simuCDFs.indiv{simu}.fsUp1,PARAMS.binSize);
-% end
-% 
-% % Switch NaNs for 1 (for high values of x, the interpolation returns NaN
-% % when there are no available values
-% simuCDFs.fs(isnan(simuCDFs.fs)) = 1;
-% % simuCDFs.fLo5 = 1 % ENVELOPES SHOULD NOT BE SUBJECT TO THE SAME SWITCH !!!
-% % simuCDFs.fUp5 = 1 % ENVELOPES SHOULD NOT BE SUBJECT TO THE SAME SWITCH !!!
-% % simuCDFs.fLo1 = 1 % ENVELOPES SHOULD NOT BE SUBJECT TO THE SAME SWITCH !!!
-% % simuCDFs.fUp1 = 1 % ENVELOPES SHOULD NOT BE SUBJECT TO THE SAME SWITCH !!!
-
 
 %% New version using a "simpler" and more manual percentile approach (still kept 
 % Greenwood for the experimental cdf. (same process as original WS's)
@@ -286,6 +283,11 @@ for simu = 1:PARAMS.numPermut % each simulation is treated individually
     %     simuCDFs.xs(:,simu) = PARAMS.binSize;
     simuCDFs.fs(:,simu) = interp1([0;unique(simuCDFs.indiv{simu}.x)],...
         [0;simuCDFs.indiv{simu}.f(2:end)],PARAMS.binSize);
+    
+    expCDFs.fFix = interp1([0;unique(expCDFs.x)],...
+        [0;expCDFs.f(2:end)],PARAMS.binSize);
+    expCDFs.xFix = PARAMS.binSize;
+    
 end
 
 % Calculate the median simulation
