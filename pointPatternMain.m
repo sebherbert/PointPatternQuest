@@ -6,22 +6,20 @@ function pointPatternMain()
 
 clear
 
-tic
-
 PARAMS = {};
-PARAMS.version = 'version0p1p2';
+PARAMS.version = 'version0p1p3';
 PARAMS.dispDistrib_1 = 0;
 PARAMS.dispDensityMap_2 = 0;
 PARAMS.numPermut = 500;
 
 % Optimization parameters
 PARAMS.optimizePar = 1; % Do an automated search for the best parameters
-PARAMS.minFitRange = 5; % Minimum value for the fitted model
-PARAMS.minFitStrength = 0; % Minimum value for the fitted model
+PARAMS.minFitRange = 5; % Minimum Range for the fitted model
+PARAMS.minFitStrength = 0; % Minimum Strength for the fitted model
 % Original values for the optimization function
 PARAMS.optiR0 = 10; % 10µm distance
 PARAMS.optiS0 = 1; % No dispersion effect
-PARAMS.fitMaxIter = 200;
+PARAMS.fitMaxIter = 50;
 
 PARAMS.displayIndivCDF = 0; % => To display individual cdf vs model figures
 
@@ -56,6 +54,8 @@ PARAMS.axis = [0 100 0 1];
 fileToOpen = uipickfiles('Prompt','Please, select the correct file to analyse (example: sox2_C_subdiv_L_corrected_nodb_noDl_xyzCASE1.mat)');
 % for development purposes only
 % fileToOpen = {'/media/sherbert/Data/Projects/OG_projects/Project6_ND_distribPattern/static_/preAnalysis_and_ims/sox2_C_subdiv_L_corrected_nodb_noDl_xyzCASE1.mat'};
+
+tic
 
 for fileOfInterest = 1:length(fileToOpen)
     mainBodyFunctions(fileToOpen{fileOfInterest},PARAMS);

@@ -211,7 +211,9 @@ dnSimu = zeros(nTarget,PARAMS.numPermut);
 % simulation effect
 cell2CellDist = pdist2(table2array(NNExp(:,{'pos3D'})),table2array(NNExp(:,{'pos3D'})));
 
-for perm = 1:PARAMS.numPermut % for each permutation run
+Grand = zeros(PARAMS.numPermut, size(PARAMS.binSize,2));
+
+parfor perm = 1:PARAMS.numPermut % for each permutation run
     if mod(perm,1000) == 0
         fprintf('Running permutation %d\n',perm);
     end
@@ -256,10 +258,10 @@ for perm = 1:PARAMS.numPermut % for each permutation run
     % Find the Nearest neighbours in the population
     dnSimu(:,perm) = findNN(popSourceSimu{perm}.pos3D, popTargetSimu{perm}.pos3D, PARAMS.samePop, pops);
     
-    % Calculate the cdf histogram
-    for i=1:size(PARAMS.binSize,2)
-        Grand(perm,i)= sum(dnSimu(:,perm)<PARAMS.binSize(i)) / numel(dnSimu(:,perm));
-    end
+    %     % Calculate the cdf histogram
+    %     for i=1:size(PARAMS.binSize,2)
+    %         Grand(perm,i)= sum(dnSimu(:,perm)<PARAMS.binSize(i)) / numel(dnSimu(:,perm));
+    %     end
 end
 
 end
