@@ -48,7 +48,7 @@ expCDFs = formatCdfsExp(dnExp, PARAMS);
 
 %% Use an optimisation function to find the most adapted strength and range parameters 
 if PARAMS.optimizePar
-    bestParams = optimizeParamsCall(NNExp, pops, rowPermut, nTarget, dnExp, expCDFs,...
+    bestParams = optimizeParamsCall(NNExp, pops, rowPermut, nTarget, expCDFs,...
         PARAMS);
     fprintf('bestParams: Range = %0.1fµm ; Strength = %0.2f\n',bestParams(1),bestParams(2));
     
@@ -104,7 +104,7 @@ fullResults.PARAMS = PARAMS;
 
 end
 
-function bestParams = optimizeParamsCall(NNExp, pops, rowPermut, nTarget, dnExp, expCDFs, PARAMS)
+function bestParams = optimizeParamsCall(NNExp, pops, rowPermut, nTarget, expCDFs, PARAMS)
 % Launch the optimization function for the fit of the strength of range of
 % the distribution effect
 x0 = [PARAMS.optiR0,PARAMS.optiS0];
@@ -127,14 +127,14 @@ xlabel('Distance to nearest neighbor (µm)');
 
 pause(0.1)
 % options = optimset('PlotFcns',@optimplotfval);
-options = optimset('MaxIter',5);
+options = optimset('MaxIter',PARAMS.fitMaxIter);
 
-bestParams = fminsearch(@two_varModel, x0, options, NNExp, pops, rowPermut, nTarget, dnExp, expCDFs, h, PARAMS);
+bestParams = fminsearch(@two_varModel, x0, options, NNExp, pops, rowPermut, nTarget, expCDFs, h, PARAMS);
 
 end
 
 
-function [medRMS, h] = two_varModel(x0, NNExp, pops, rowPermut, nTarget, dnExp, expCDFs, h, PARAMS)
+function [medRMS, h] = two_varModel(x0, NNExp, pops, rowPermut, nTarget, expCDFs, h, PARAMS)
 % provide the ks test comparing the experimental and simulated
 % distributions
 
@@ -212,7 +212,7 @@ dnSimu = zeros(nTarget,PARAMS.numPermut);
 cell2CellDist = pdist2(table2array(NNExp(:,{'pos3D'})),table2array(NNExp(:,{'pos3D'})));
 
 for perm = 1:PARAMS.numPermut % for each permutation run
-    if mod(perm,500) == 0
+    if mod(perm,1000) == 0
         fprintf('Running permutation %d\n',perm);
     end
     % Initiate a probability map => prob = 1 for the permutable population and

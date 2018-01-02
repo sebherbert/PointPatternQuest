@@ -6,11 +6,13 @@ function pointPatternMain()
 
 clear
 
+tic
+
 PARAMS = {};
 PARAMS.version = 'version0p1p2';
 PARAMS.dispDistrib_1 = 0;
 PARAMS.dispDensityMap_2 = 0;
-PARAMS.numPermut = 100;
+PARAMS.numPermut = 500;
 
 % Optimization parameters
 PARAMS.optimizePar = 1; % Do an automated search for the best parameters
@@ -19,6 +21,7 @@ PARAMS.minFitStrength = 0; % Minimum value for the fitted model
 % Original values for the optimization function
 PARAMS.optiR0 = 10; % 10µm distance
 PARAMS.optiS0 = 1; % No dispersion effect
+PARAMS.fitMaxIter = 200;
 
 PARAMS.displayIndivCDF = 0; % => To display individual cdf vs model figures
 
@@ -29,7 +32,7 @@ PARAMS.displayIndivCDF = 0; % => To display individual cdf vs model figures
 PARAMS.effectMultiRange = [10];
 
 PARAMS.effectRangeU = 'µm';
-cd 
+
 % Strength of the effect of a cell on its neighbours
 % x = inputdlg('Enter space-separated numbers:',...
 %     'Sample', [1 50]);
@@ -46,17 +49,19 @@ PARAMS.effectMultiStrength = [1]; % Can be multiple values
 
 % Display Parameters
 PARAMS.maxSizeCDF = 200; % maximum number of points on the cdf
-PARAMS.binSize = 0:0.1:200; % bin size for the ecdf => if force binning of ecdf
+PARAMS.binSize = 0:0.1:100; % bin size for the ecdf => if force binning of ecdf
 PARAMS.axis = [0 100 0 1];
 
 % File import
-% fileToOpen = uipickfiles('Prompt','Please, select the correct file to analyse (example: sox2_C_subdiv_L_corrected_nodb_noDl_xyzCASE1.mat)');
+fileToOpen = uipickfiles('Prompt','Please, select the correct file to analyse (example: sox2_C_subdiv_L_corrected_nodb_noDl_xyzCASE1.mat)');
 % for development purposes only
-fileToOpen = {'/media/sherbert/Data/Projects/OG_projects/Project6_ND_distribPattern/static_/preAnalysis_and_ims/sox2_C_subdiv_L_corrected_nodb_noDl_xyzCASE1.mat'};
+% fileToOpen = {'/media/sherbert/Data/Projects/OG_projects/Project6_ND_distribPattern/static_/preAnalysis_and_ims/sox2_C_subdiv_L_corrected_nodb_noDl_xyzCASE1.mat'};
 
 for fileOfInterest = 1:length(fileToOpen)
     mainBodyFunctions(fileToOpen{fileOfInterest},PARAMS);
 end
+
+toc
 
 end
 
@@ -165,23 +170,23 @@ function dataCombined = mainPPA(S, d123_1, x, y, z, PARAMS)
 NNExp = table((1:length(S))',S',d123_1',[x,y,z]);
 NNExp.Properties.VariableNames = {'cellID','cellType','nearestNeighbour','pos3D'};
 
-% % Point pattern analysis Type 2 effect on Type 2 in Type 1+2 (first neighbor)
-% pops.popSource = 2;
-% pops.popTarget = 2;
-% pops.popPermut = [1 2];
-% tAnalysis = sprintf('t%dvst%d',pops.popSource,pops.popTarget);
-% fullPath = [PARAMS.path, PARAMS.name, '_', tAnalysis];
-% fprintf('Running analysis %s\n',tAnalysis);
-% dataCombined.(tAnalysis) = pointPatternFNNAnalysis(fullPath, NNExp, pops, PARAMS);
-% 
-% % Point pattern analysis Type 3 effect on type 3 in Type 1+2+3 (first neighbor)
-% pops.popSource = 3;
-% pops.popTarget = 3;
-% pops.popPermut = [1 2 3];
-% tAnalysis = sprintf('t%dvst%d',pops.popSource,pops.popTarget);
-% fullPath = [PARAMS.path, PARAMS.name, '_', tAnalysis];
-% fprintf('Running analysis %s\n',tAnalysis);
-% dataCombined.(tAnalysis) = pointPatternFNNAnalysis(fullPath, NNExp, pops, PARAMS);
+% Point pattern analysis Type 2 effect on Type 2 in Type 1+2 (first neighbor)
+pops.popSource = 2;
+pops.popTarget = 2;
+pops.popPermut = [1 2];
+tAnalysis = sprintf('t%dvst%d',pops.popSource,pops.popTarget);
+fullPath = [PARAMS.path, PARAMS.name, '_', tAnalysis];
+fprintf('Running analysis %s\n',tAnalysis);
+dataCombined.(tAnalysis) = pointPatternFNNAnalysis(fullPath, NNExp, pops, PARAMS);
+
+% Point pattern analysis Type 3 effect on type 3 in Type 1+2+3 (first neighbor)
+pops.popSource = 3;
+pops.popTarget = 3;
+pops.popPermut = [1 2 3];
+tAnalysis = sprintf('t%dvst%d',pops.popSource,pops.popTarget);
+fullPath = [PARAMS.path, PARAMS.name, '_', tAnalysis];
+fprintf('Running analysis %s\n',tAnalysis);
+dataCombined.(tAnalysis) = pointPatternFNNAnalysis(fullPath, NNExp, pops, PARAMS);
 
 % Point pattern analysis Type 3 effect on type 2 in Type 1+2 (first neighbor)
 pops.popSource = 3;
