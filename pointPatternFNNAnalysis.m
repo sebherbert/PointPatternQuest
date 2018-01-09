@@ -108,27 +108,36 @@ function [bestParams, finalRMS] = optimizeParamsCall(NNExp, pops, rowPermut, nTa
 % the distribution effect
 x0 = [PARAMS.optiR0,PARAMS.optiS0];
 
-% Display the background image (exp value)
-colors = lines(2);
-
-figure
-h(1) = plot(expCDFs.x,expCDFs.f,'linewidth',2,'Color',colors(2,:));
-hold on
-
 effect.Range = x0(1);
 effect.Strength = x0(2);
 [dnSimu, ~] = simulateSpatialDisp(effect, NNExp, pops, rowPermut, nTarget, PARAMS);
 simuCDFs = formatCdfsSimu(dnSimu, PARAMS);
-h(2) = plot(simuCDFs.x,simuCDFs.f50pc,'linewidth',2,'Color',colors(1,:));
 
-ylabel('Cumulative cell frequency');
-xlabel('Distance to nearest neighbor (µm)');
+if PARAMS.doDisplayLiveFit
+    % Display the background image (exp value)
+    colors = lines(2);
+    figure
+    h(1) = plot(expCDFs.x,expCDFs.f,'linewidth',2,'Color',colors(2,:));
+    hold on
+    
+    % And original fit (could be added to the )
+    h(2) = plot(simuCDFs.x,simuCDFs.f50pc,'linewidth',2,'Color',colors(1,:));
+    
+    ylabel('Cumulative cell frequency');
+    xlabel('Distance to nearest neighbor (µm)');
+    
+    pause(0.1)
+end
 
-pause(0.1)
 % options = optimset('PlotFcns',@optimplotfval);
 options = optimset('MaxIter',PARAMS.fitMaxIter);
 
-[bestParams, finalRMS]= fminsearch(@two_varModel, x0, options, NNExp, pops, rowPermut, nTarget, expCDFs, h, PARAMS);
+if PARAMS.doDisplayLiveFit
+    [bestParams, finalRMS]= fminsearch(@two_varModel, x0, options, NNExp, pops, rowPermut, nTarget, expCDFs, h, PARAMS);
+else
+    [bestParams, finalRMS]= fminsearch(@two_varModel, x0, options, NNExp, pops, rowPermut, nTarget, expCDFs, [], PARAMS);
+end
+
 
 end
 
@@ -153,9 +162,11 @@ diffCdf = expCDFs.fFix' - simuCDFs.f50pc;
 diffCdf(isnan(diffCdf)) = 0;
 medRMS = median(rms(diffCdf));
 
-% update image
-set(h(2),'YData',simuCDFs.f50pc,'Color',lines(1));
-pause(0.1)
+if PARAMS.doDisplayLiveFit
+    % update image
+    set(h(2),'YData',simuCDFs.f50pc,'Color',lines(1));
+    pause(0.1)
+end
 
 fprintf('bestParams: Range = %0.1fµm ; Strength = %0.2f ; RMS = %0.5f\n',effect.Range,effect.Strength,medRMS);
 
