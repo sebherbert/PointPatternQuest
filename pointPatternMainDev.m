@@ -2,14 +2,14 @@
 % Script copied and modified by Sebastien Herbert
 
 
-function pointPatternMain()
+function pointPatternMainDev()
 
 clear
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PARAMETERS/ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 PARAMS = {};
-PARAMS.version = 'version0p1p4';
+PARAMS.version = 'versionDev';
 PARAMS.dispDistrib_1 = 0;
 PARAMS.dispDensityMap_2 = 0;
 
@@ -18,10 +18,12 @@ PARAMS.optimizePar = 1; % Do an automated search for the best parameters
 PARAMS.minFitRange = 5; % Minimum Range for the fitted model
 PARAMS.minFitStrength = 0; % Minimum Strength for the fitted model
 % Original values for the optimization function
-PARAMS.optiR0 = 10; % 10µm distance
-PARAMS.optiS0 = 1; % No dispersion effect
-PARAMS.fitMaxIter = 200; % Nbr of iterations for the min search
-PARAMS.numPermut = 1000; % Nbr of permutation for model estimation
+PARAMS.doVarFitInit = 1;
+PARAMS.optiR0 = 10; % µm Range => WARNING WILL BE OVERWRITTEN IF doVarFitInit
+PARAMS.optiS0 = 1; % Dispersion Strength  => WARNING WILL BE OVERWRITTEN IF doVarFitInit
+PARAMS.fitMaxIter = 10; % Nbr of iterations for the min search
+PARAMS.numPermut = 100; % Nbr of permutation for model estimation
+PARAMS.doDisplayLiveFit = 0; % If you want to see the fit evolve live
 
 PARAMS.displayIndivCDF = 0; % => To display individual cdf vs model figures
 
@@ -81,6 +83,19 @@ PARAMS.path = [PARAMS.path, filesep];
 filename = [PARAMS.name,ext];
 
 cd(PARAMS.path)
+
+if PARAMS.doVarFitInit
+    folderIndexes = strfind(PARAMS.path,filesep) ;
+    lastFolderName = PARAMS.path(folderIndexes(end-1)+1:folderIndexes(end)-1);
+    if contains(lastFolderName,{'R','S'})
+        PARAMS.optiR0 = str2num(cell2mat(regexp(lastFolderName, '(?<=R)[0-9]*','match')));
+        if strcmp(cell2mat(regexp(lastFolderName, '(?<=S)[0-9]*','match')),'0')
+            PARAMS.optiS0 = str2num(cell2mat(regexprep(regexp(lastFolderName, '(?<=S)[0-9]*0p[0-9]*','match'),'p','.')));
+        else
+            PARAMS.optiS0 = str2num(cell2mat(regexp(lastFolderName, '(?<=S)[0-9]*','match')));
+        end
+    end
+end
 
 % find which part of the brain is studied
 % regexp => single digit following the '_xyzCASE' string
@@ -185,7 +200,7 @@ if PARAMS.dot2vst2
     tAnalysis = sprintf('t%dvst%d',pops.popSource,pops.popTarget);
     fullPath = [PARAMS.path, PARAMS.name, '_', tAnalysis];
     fprintf('Running analysis %s\n',tAnalysis);
-    dataCombined.(tAnalysis) = pointPatternFNNAnalysis(fullPath, NNExp, pops, PARAMS);
+    dataCombined.(tAnalysis) = pointPatternFNNAnalysisDev(fullPath, NNExp, pops, PARAMS);
 end
 
 % Point pattern analysis Type 3 effect on type 3 in Type 1+2+3 (first neighbor)
@@ -196,7 +211,7 @@ if PARAMS.dot3vst3
     tAnalysis = sprintf('t%dvst%d',pops.popSource,pops.popTarget);
     fullPath = [PARAMS.path, PARAMS.name, '_', tAnalysis];
     fprintf('Running analysis %s\n',tAnalysis);
-    dataCombined.(tAnalysis) = pointPatternFNNAnalysis(fullPath, NNExp, pops, PARAMS);
+    dataCombined.(tAnalysis) = pointPatternFNNAnalysisDev(fullPath, NNExp, pops, PARAMS);
 end
 
 % Point pattern analysis Type 3 effect on type 2 in Type 1+2 (first neighbor)
@@ -207,7 +222,7 @@ if PARAMS.dot3vst2
     tAnalysis = sprintf('t%dvst%d',pops.popSource,pops.popTarget);
     fullPath = [PARAMS.path, PARAMS.name, '_', tAnalysis];
     fprintf('Running analysis %s\n',tAnalysis);
-    dataCombined.(tAnalysis) = pointPatternFNNAnalysis(fullPath, NNExp, pops, PARAMS);
+    dataCombined.(tAnalysis) = pointPatternFNNAnalysisDev(fullPath, NNExp, pops, PARAMS);
 end
 
 end
