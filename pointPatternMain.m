@@ -21,8 +21,8 @@ PARAMS.minFitStrength = 0; % Minimum Strength for the fitted model
 PARAMS.doVarFitInit = 1;
 PARAMS.optiR0 = 10; % µm Range => WARNING WILL BE OVERWRITTEN IF doVarFitInit
 PARAMS.optiS0 = 1; % Dispersion Strength  => WARNING WILL BE OVERWRITTEN IF doVarFitInit
-PARAMS.fitMaxIter = 10; % Nbr of iterations for the min search
-PARAMS.numPermut = 100; % Nbr of permutation for model estimation
+PARAMS.fitMaxIter = 200; % Nbr of iterations for the min search
+PARAMS.numPermut = 1000; % Nbr of permutation for model estimation
 PARAMS.doDisplayLiveFit = 0; % If you want to see the fit evolve live
 
 PARAMS.displayIndivCDF = 0; % => To display individual cdf vs model figures
@@ -94,8 +94,9 @@ if PARAMS.doVarFitInit % adapts fit initialization based on folder name
         else
             PARAMS.optiS0 = str2num(cell2mat(regexp(lastFolderName, '(?<=S)[0-9]*','match')));
         end
+        fprintf('Settings new fit init values to R0 = %d and S0 = %d\n', PARAMS.optiR0, PARAMS.optiS0);
     else 
-        sprintf('folder name %s is inadapted! Stopping the analysis\n',lastFolderName);
+        fprintf('folder name %s is inadapted! Stopping the analysis\n',lastFolderName);
         return 
     end
 end
