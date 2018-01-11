@@ -9,12 +9,12 @@ clear
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PARAMETERS/ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 PARAMS = {};
-PARAMS.version = 'version0p1p5';
+PARAMS.version = 'version0p1p6';
 PARAMS.dispDistrib_1 = 0;
 PARAMS.dispDensityMap_2 = 0;
 
 % Optimization parameters
-PARAMS.optimizePar = 1; % Do an automated search for the best parameters
+PARAMS.optimizePar = 0; % Do an automated search for the best parameters
 PARAMS.minFitRange = 5; % Minimum Range for the fitted model
 PARAMS.minFitStrength = 0; % Minimum Strength for the fitted model
 % Original values for the optimization function
@@ -84,7 +84,7 @@ filename = [PARAMS.name,ext];
 
 cd(PARAMS.path)
 
-if PARAMS.doVarFitInit % adapts fit initialization based on folder name
+if PARAMS.doVarFitInit && PARAMS.optimizePar% adapts fit initialization based on folder name
     folderIndexes = strfind(PARAMS.path,filesep) ;
     lastFolderName = PARAMS.path(folderIndexes(end-1)+1:folderIndexes(end)-1);
     if contains(lastFolderName,{'R','S'})
