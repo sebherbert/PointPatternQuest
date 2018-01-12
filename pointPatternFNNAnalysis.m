@@ -26,6 +26,7 @@ Output:
 % Find the average cell size by averaging the minimum cell to cell distance
 CellDiameter = mean(NNExp.nearestNeighbour);
 
+
 %% Extract the 3D positions of the 2 cell populations of interest
 popSource3Dpos = table2array(NNExp(NNExp.cellType == pops.popSource, {'pos3D'}));
 
@@ -42,6 +43,12 @@ end
 
 % Find nearest neighbour
 dnExp = findNN(popSource3Dpos, popTarget3Dpos, PARAMS.samePop, pops)';
+
+% If the range of the model has to be fitted to the cdf50 of the NN
+% distribution
+if PARAMS.useRangeCDF50 == 1 % Boolean to exchange the cdf 
+    PARAMS.optiR0 = double(median(dnExp));
+end
 
 % Interpolate the CDF on a fixed scale and estimate the envelopes
 expCDFs = formatCdfsExp(dnExp, PARAMS);
@@ -85,6 +92,11 @@ else % Use preset values
         figure
         displayCDFs(expCDFs, simuCDFs, PARAMS)
     end
+    
+    diffCdf = expCDFs.fFix' - simuCDFs.f50pc;
+    diffCdf(isnan(diffCdf)) = 0;
+    medRMS = median(rms(diffCdf));
+    
 end
 
 % Structure output
@@ -98,6 +110,8 @@ if PARAMS.optimizePar
     fullResults.fit.Range = bestParams(1);
     fullResults.fit.Strength = bestParams(2);
     fullResults.fit.medRMS = medRMS;
+else
+    fullResults.medRMS = medRMS;
 end
 fullResults.PARAMS = PARAMS;
 

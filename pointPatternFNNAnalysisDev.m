@@ -85,6 +85,11 @@ else % Use preset values
         figure
         displayCDFs(expCDFs, simuCDFs, PARAMS)
     end
+    
+    diffCdf = expCDFs.fFix' - simuCDFs.f50pc;
+    diffCdf(isnan(diffCdf)) = 0;
+    medRMS = median(rms(diffCdf));
+    
 end
 
 % Structure output
@@ -98,6 +103,8 @@ if PARAMS.optimizePar
     fullResults.fit.Range = bestParams(1);
     fullResults.fit.Strength = bestParams(2);
     fullResults.fit.medRMS = medRMS;
+else
+    fullResults.medRMS = medRMS;
 end
 fullResults.PARAMS = PARAMS;
 

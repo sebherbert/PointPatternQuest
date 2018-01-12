@@ -1,71 +1,72 @@
 % Source is DataAnalysis.m from Willy Supatto modified Sept 27, 2017
 % Script copied and modified by Sebastien Herbert
-
+% Model: 
+% if Strength is > 1 => it increases the probability of the neighbours to be
+% selected => Attraction
+% if Strength is < 1 => it decreases the probability of the neighbours to be
+% selected => Repulsion
+% if Strength is = 1 => it doesn't affect the probability of the neighbours to be
+% selected => No effect
 
 function pointPatternMain()
 
 clear
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PARAMETERS/ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PARAMETERS/ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 PARAMS = {};
-PARAMS.version = 'version0p1p6';
+PARAMS.version = 'version0p1p7';
+
+%% Which cell type distribution effect to test
+PARAMS.dot2vst2 = 1;
+PARAMS.dot3vst3 = 1;
+PARAMS.dot3vst2 = 1;
+
+%% Global Display parameters
 PARAMS.dispDistrib_1 = 0;
 PARAMS.dispDensityMap_2 = 0;
+PARAMS.displayIndivCDF = 0; % => To display individual cdf vs model figures
+PARAMS.maxSizeCDF = 200; % maximum number of points on the cdf
+PARAMS.binSize = 0:0.1:100; % bin size for the ecdf => if force binning of ecdf
+PARAMS.axis = [0 100 0 1];
+PARAMS.dispModelsOverlay = 0; % When different Range or Strength are tested 
 
-% Optimization parameters
-PARAMS.optimizePar = 0; % Do an automated search for the best parameters
+%% Global saving parameters
+PARAMS.saveIndivModel = 0; % When different Range or Strength are tested
+
+%% Optimization model parameters
+PARAMS.optimizePar = 1; % Do an automated search for the best parameters
 PARAMS.minFitRange = 5; % Minimum Range for the fitted model
 PARAMS.minFitStrength = 0; % Minimum Strength for the fitted model
 % Original values for the optimization function
-PARAMS.doVarFitInit = 1;
+PARAMS.doVarFitInit = 0; % => optiR0 and optiS0 will be changing the folder name
+PARAMS.useRangeCDF50 = 1; % Boolean to exchange the cdf 
 PARAMS.optiR0 = 10; % µm Range => WARNING WILL BE OVERWRITTEN IF doVarFitInit
 PARAMS.optiS0 = 1; % Dispersion Strength  => WARNING WILL BE OVERWRITTEN IF doVarFitInit
 PARAMS.fitMaxIter = 200; % Nbr of iterations for the min search
 PARAMS.numPermut = 1000; % Nbr of permutation for model estimation
 PARAMS.doDisplayLiveFit = 0; % If you want to see the fit evolve live
 
-PARAMS.displayIndivCDF = 0; % => To display individual cdf vs model figures
-
+%% Hard coded model parameters
 % Type of effect of a cell on its nearest neighbours can only be 'None',
 % 'Repulsion', 'Attraction'
 % Distance of effect of a cell on its neighbours
-% PARAMS.effectRange = 10;
-PARAMS.effectMultiRange = [10];
-
+PARAMS.effectMultiRange = 10; % Can be multiple values
 PARAMS.effectRangeU = 'µm';
-
 % Strength of the effect of a cell on its neighbours
-% x = inputdlg('Enter space-separated numbers:',...
-%     'Sample', [1 50]);
-% PARAMS.effectMultiStrength = str2num(x{:}); % Can be multiple values
-PARAMS.effectMultiStrength = [1]; % Can be multiple values
-% if effect is > 1 => it increases the probability of the neighbours to be
-% selected => Attraction
-% if effect is < 1 => it decreases the probability of the neighbours to be
-% selected => Repulsion
-% if effect is = 1 => it doesn't affect the probability of the neighbours to be
-% selected => No effect
-
-% Display Parameters
-PARAMS.maxSizeCDF = 200; % maximum number of points on the cdf
-PARAMS.binSize = 0:0.1:100; % bin size for the ecdf => if force binning of ecdf
-PARAMS.axis = [0 100 0 1];
-
-% Which cell type tests to run
-PARAMS.dot2vst2 = 0;
-PARAMS.dot3vst3 = 0;
-PARAMS.dot3vst2 = 1;
+% PARAMS.effectMultiStrength = logspace(log(1/16)/log(10),log(16)/log(10),17); % Can be multiple values
+PARAMS.effectMultiStrength = 1; % Can be multiple values
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% /PARAMETERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% File import
+%% File import
 fileToOpen = uipickfiles('Prompt','Please, select the correct file to analyse (example: sox2_C_subdiv_L_corrected_nodb_noDl_xyzCASE1.mat)');
 % for development purposes only
 % fileToOpen = {'/media/sherbert/Data/Projects/OG_projects/Project6_ND_distribPattern/static_/preAnalysis_and_ims/sox2_C_subdiv_L_corrected_nodb_noDl_xyzCASE1.mat'};
 
 tic
 
+%% Apply function to individual files
 for fileOfInterest = 1:length(fileToOpen)
     mainBodyFunctions(fileToOpen{fileOfInterest},PARAMS);
 end
@@ -84,7 +85,7 @@ filename = [PARAMS.name,ext];
 
 cd(PARAMS.path)
 
-if PARAMS.doVarFitInit && PARAMS.optimizePar% adapts fit initialization based on folder name
+if (PARAMS.doVarFitInit && PARAMS.optimizePar) % adapts fit initialization based on folder name
     folderIndexes = strfind(PARAMS.path,filesep) ;
     lastFolderName = PARAMS.path(folderIndexes(end-1)+1:folderIndexes(end)-1);
     if contains(lastFolderName,{'R','S'})
@@ -171,13 +172,17 @@ else
             
             dataCombined = dataCombinedModels.(PARAMS.model);
             
-            save([PARAMS.path,PARAMS.name,PARAMS.brainPart,'_',PARAMS.model],'dataCombined');            
+            if PARAMS.saveIndivModel
+                save([PARAMS.path,PARAMS.name,PARAMS.brainPart,'_',PARAMS.model],'dataCombined');
+            end
         end
         
     end
     
     if numel(PARAMS.effectMultiStrength)*numel(PARAMS.effectMultiRange) > 1
-        displayModelSerie(dataCombinedModels, PARAMS);
+        if PARAMS.dispModelsOverlay
+            displayModelSerie(dataCombinedModels, PARAMS);
+        end
         save([PARAMS.path,PARAMS.name,PARAMS.brainPart,'_allModels'],'dataCombinedModels');
         % (=> still gonna give 3analType*3brainPart / sample)
         % => Adapt Combine and compare ? Only the display part ?
