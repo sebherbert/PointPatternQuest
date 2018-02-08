@@ -24,7 +24,7 @@ Output:
 % r = PARAMS.binSize;
 
 % Find the average cell size by averaging the minimum cell to cell distance
-CellDiameter = mean(NNExp.nearestNeighbour);
+PARAMS.cellDiameter = mean(NNExp.nearestNeighbour);
 
 
 %% Extract the 3D positions of the 2 cell populations of interest
@@ -67,7 +67,7 @@ if PARAMS.optimizePar
     simuCDFs = formatCdfsSimu(dnSimu, PARAMS);   
     % Display simulation + experimental
     figure
-    displayCDFs(expCDFs, simuCDFs, PARAMS);
+    displayCDFs(expCDFs, simuCDFs, PARAMS, PARAMS.useRMSMaxDist);
     
     % recalculate RMS and GOF
     diffCdf = expCDFs.fFix' - simuCDFs.f50pc;
@@ -93,15 +93,15 @@ else % Use preset values
         displayCDFs(expCDFs, simuCDFs, PARAMS)
     end
     
+    medRMS = evaluateRMS(expCDFs,simuCDFs,PARAMS);
     diffCdf = expCDFs.fFix' - simuCDFs.f50pc;
     diffCdf(isnan(diffCdf)) = 0;
-    medRMS = median(rms(diffCdf));
+    medRMS = rms(diffCdf);
     
 end
 
 % Structure output
 fullResults = {};
-fullResults.cellDiameter = CellDiameter;
 fullResults.dnExp = dnExp;
 fullResults.expCDFs = expCDFs;
 fullResults.dnSimu = dnSimu;
@@ -116,6 +116,23 @@ end
 fullResults.PARAMS = PARAMS;
 
 end
+
+function medRMS = evaluateRMS(expCDFs,simuCDFs,PARAMS)
+% Calculate the RMS between experimental and simulated curve f50pc
+
+diffCdf = expCDFs.fFix' - simuCDFs.f50pc;
+diffCdf(isnan(diffCdf)) = 0;
+
+if PARAMS.useRMSMaxDist ==1
+    % only take into account the distance ditribution up to a maximum distance
+    % (as a function of the cell diameter)
+    medRMS = rms(diffCdf(simuCDFs.x<PARAMS.maxDistFactor*PARAMS.cellDiameter));
+else
+    medRMS = rms(diffCdf);
+end
+
+end
+
 
 function [bestParams, finalRMS] = optimizeParamsCall(NNExp, pops, rowPermut, nTarget, expCDFs, PARAMS)
 % Launch the optimization function for the fit of the strength of range of
@@ -172,9 +189,7 @@ end
 
 simuCDFs = formatCdfsSimu(dnSimu, PARAMS);
 
-diffCdf = expCDFs.fFix' - simuCDFs.f50pc;
-diffCdf(isnan(diffCdf)) = 0;
-medRMS = median(rms(diffCdf));
+medRMS = evaluateRMS(expCDFs,simuCDFs,PARAMS);
 
 if PARAMS.doDisplayLiveFit
     % update image
@@ -361,13 +376,13 @@ simuCDFs.fstd = std(simuCDFs.fs,[],2);
 
 end
 
-function displayCDFs(expCDFs, simuCDFs, PARAMS)
+function displayCDFs(expCDFs, simuCDFs, PARAMS, dispMaxCdf)
 
 ylabel('Cumulative cell frequency');
 xlabel('Distance to nearest neighbor (µm)');
 
-% Use 2 colors only
-colors = [lines(2) [0.5;0.5]];
+% Use 2 colors only (3rd for the max cdf)
+colors = [lines(3) [0.5;0.5;1]];
 
 hold on
 % Plot the experimental data
@@ -387,13 +402,27 @@ plot(simuCDFs.x,simuCDFs.f99pc,'--','linewidth',1,'color',colors(1,:));
 % text(0.5,0.95,'95% and 99% intervals')
 % text(0.5,0.9,[num2str(PARAMS.numPermut),' random perm.'])
 
+% Set up the legend
+legs = {'Experimental data','95% enveloppe','99% enveloppe', ...
+    regexprep(sprintf('Simulated data (%s)',PARAMS.model),'_',' '),'95% enveloppe',...
+    '99% enveloppe'};
+
+if dispMaxCdf
+    % last value used for RMS calculation
+    xPos = (sum(simuCDFs.x<PARAMS.maxDistFactor*PARAMS.cellDiameter));
+    h(7) = plot(simuCDFs.x(xPos),simuCDFs.f50pc(xPos),'o',...
+        'MarkerSize',10, 'MarkerEdgeColor',[0,0.5,0],...
+        'MarkerFaceColor',[0,0.5,0]);
+    % Adapt the legend
+    legs = [legs sprintf('maxCDF = %0.1fum/%dcellDia',PARAMS.maxDistFactor*PARAMS.cellDiameter,...
+        PARAMS.maxDistFactor)];
+end
+
 % force the axes
 axis(PARAMS.axis);
 
 % display legend
-legend(h,{'Experimental data','95% enveloppe','99% enveloppe', ...
-    regexprep(sprintf('Simulated data (%s)',PARAMS.model),'_',' '),'95% enveloppe',...
-    '99% enveloppe'},'Location','southeast');
+legend(h,legs,'Location','southeast');
 legend boxoff;
 
 end
