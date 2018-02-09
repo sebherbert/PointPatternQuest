@@ -94,9 +94,6 @@ else % Use preset values
     end
     
     medRMS = evaluateRMS(expCDFs,simuCDFs,PARAMS);
-    diffCdf = expCDFs.fFix' - simuCDFs.f50pc;
-    diffCdf(isnan(diffCdf)) = 0;
-    medRMS = rms(diffCdf);
     
 end
 
