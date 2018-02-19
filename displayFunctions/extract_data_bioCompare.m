@@ -2,6 +2,9 @@
 
 function extract_data_bioCompare
 
+fetchError = 1; % Use if error estimation has already been done
+
+
 %% load all data
 % Data must follow the .mat file example of
 % 170126_2month_20x_subdiv_L_2nodb_noDl_xyzCASE1_allSample_fittedModel.mat
@@ -9,6 +12,9 @@ fileToOpen = uipickfiles('Prompt','Please, select the correct file to analyse','
 % temp = load('loader.mat');
 % fileToOpen = temp.fileToOpen;
 fullTable = table;
+if fetchError
+    errorTable = table;
+end
 
 rootFolder = [];
 
@@ -65,10 +71,28 @@ for file = 1:length(fileToOpen)
             dataCombined.(statTests{statTest}).PARAMS.optiR0, ...
             dataCombined.(statTests{statTest}).PARAMS.optiS0}));
     end
+    
+    if fetchError
+        for statTest = 1 : numel(statTests)
+            errorTable = vertcat(errorTable,cell2table({real(dataCombined.(statTests{statTest}).assoDer.fast.RMS_Rferror), ...
+                dataCombined.(statTests{statTest}).assoDer.fast.RMS_Sferror, ...
+                dataCombined.(statTests{statTest}).assoDer.fast.RMS2nd_Rf, ...
+                dataCombined.(statTests{statTest}).assoDer.fast.RMS2nd_Sf}));
+            if errorTable.Var3(end) < 0
+                errorTable.Var1(end) = nan;
+            end
+        end
+    end
 end
 
 variableNames = {'Sample','bioCondition','brainPart','distTest','Range','Strength','finalRMS','numPermut','fitMaxIter','R0','S0'};
 fullTable.Properties.VariableNames = variableNames;
+
+if fetchError
+    errorTable.Properties.VariableNames = {'RMS_Rferror', 'RMS_Sferror', 'RMSf2nd_RR', 'RMSf2nd_SS'};
+    fullTable = horzcat(fullTable,errorTable);
+end
+
 
 %% Parse and plot data in a subplot
 
