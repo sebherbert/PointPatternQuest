@@ -2,6 +2,7 @@
 function errorRMSmap
 % Calculate hessian matrix and second order partial derivatives at the
 % point of interest
+% only works for t3vst2 for the moment, could be expanded
 
 % Pick all the folders of interest
 listFolders = uipickfiles('Prompt','Select folders to process');
@@ -19,35 +20,56 @@ fileFitregexp = answer{2};
 % Loop through the different folders
 for folder = 1:numel(listFolders)
     
+    fprintf('Processing folder: %s', listFolders{folder});
+    
+    close all
     % Go to the folder of interest
     cd(listFolders{folder})
     
     % Check and load the first file
-    listFiles = dir (fileRMSMapregexp);
-    if numel(listFiles)~=1
-        fprintf('Error in folder: %s',listFolders{folder});
+    fitFile = {};
+    tempFitFile = dir (fileFitregexp);
+    for file = 1:numel(tempFitFile)
+        if ~contains(tempFitFile(file).name,'_delta')
+            fitFile{length(fitFile)+1} = tempFitFile(file);
+        end
+    end
+    if numel(fitFile)~=1
+        fprintf('Error (2) in folder: %s\n',listFolders{folder});
         continue
     else
-        RMSdata = load(listFiles.name);
-        RMSField = fieldnames(RMSdata);
+        fitData = load(fitFile{1}.name);
+        fitField = fieldnames(fitData);
     end
     
     % Check and load the first file
-    listFiles = dir (fileFitregexp);
-    if numel(listFiles)~=1
-        fprintf('Error in folder: %s',listFolders{folder});
+    RMSfile = dir (fileRMSMapregexp);
+    if numel(RMSfile)~=1
+        fprintf('Error (1) in folder: %s\n',listFolders{folder});
         continue
     else
-        fitData = load(listFiles.name);
-        fitField = fieldnames(fitData);
+        RMSdata = load(RMSfile.name);
+        RMSField = fieldnames(RMSdata);
     end
-    evaluateError2ndDer(RMSdata.(RMSField{1}),fitData.(fitField{1}));
+    
+    assoDer = evaluateError2ndDer(RMSdata.(RMSField{1}),fitData.(fitField{1}),...
+        RMSfile,fitFile);
+    fitData.(fitField{1}).t3vst2.assoDer = assoDer;
+    if fitField{1} == 'dataCombined'
+        dataCombined = fitData.(fitField{1});
+    else
+        fprintf('Error (3) in folder: %s\n',listFolders{folder});
+        continue
+    end
+    [~, fileName, ~] = fileparts(fitFile{1}.name);
+    save(strcat(fileName,'_deltaSmoothImguidedfilter.mat'),'dataCombined');
+
     clear RMSdata fitData
 end
 
 end
 
-function evaluateError2ndDer(RMSdata,fitData)
+function assoDer = evaluateError2ndDer(RMSdata,fitData,RMSfile,fitfile)
 %% format finalRMS as a 2D map
 % extract and concatenate fields of interest
 
@@ -77,7 +99,9 @@ allRmeshForm = reshape(allModels.Range,[numel(allS),numel(allR)]);
 allSmeshForm = reshape(allModels.Strength,[numel(allS),numel(allR)]);
 
 
-%% Interpolate to improve smoothness ? => not useful
+%% improve smoothness
+% mapRMS = imgaussfilt(mapRMS,0.5);
+% mapRMS = imguidedfilter(mapRMS);
 
 %% Interpolate along the Rf and Sf at exact fitted values
 
@@ -152,15 +176,18 @@ RMS_Sferror = sqrt(1/RMS2nd_Sf);
 
 %% Save datafile
 assoDer = {};
+assoDer.RMSfile = RMSfile;
+assoDer.fitfile = fitfile;
 assoDer.allModels = allModels;
 assoDer.Rf = Rf;
 assoDer.Sf = Sf;
-assoDer.NInter = NInter;
-assoDer.epsilonStep = epsilonStep;
-assoDer.errorR = errorR;
-assoDer.errorS = errorS;
-assoDer.errorRf = errorRf;
-assoDer.errorSf = errorSf;
+% assoDer.NInter = NInter;
+% assoDer.epsilonStep = epsilonStep;
+% assoDer.errorR = errorR;
+% assoDer.errorS = errorS;
+% assoDer.errorRf = errorRf;
+% assoDer.errorSf = errorSf;
+assoDer.interFact = interFact;
 assoDer.maps.gr = gr;
 assoDer.maps.gs = gs;
 assoDer.maps.grr = grr;
@@ -169,12 +196,12 @@ assoDer.maps.gss = gss;
 assoDer.maps.gsr = gsr;
 assoDer.fast.RMS2nd_Rf = RMS2nd_Rf;
 assoDer.fast.RMS2nd_Sf = RMS2nd_Sf;
-assoDer.fast.RMS_Rferror =RMS_Rferror;
-assoDer.fast.RMS_Sferror =RMS_Sferror;
+assoDer.fast.RMS_Rferror = RMS_Rferror;
+assoDer.fast.RMS_Sferror = RMS_Sferror;
 save('associatedError','assoDer');
 
-
-%% display surface and fitted parameters
+%% Displays
+% display surface and fitted parameters
 figure; 
 surf(allR, allS, mapRMS, 'EdgeColor', 'None', 'FaceColor', 'interp');
 % plot3(allModels.Range, log(allModels.Strength), allModels.finalRMS)
@@ -192,11 +219,14 @@ hold on
 surf(newAllR, newAllS, newMapRMS, 'EdgeColor', 'None', 'FaceColor', 'interp');
 surf(newAllR, newAllS, gr, 'EdgeColor', 'None', 'FaceColor', 'interp');
 surf(newAllR, newAllS, grr, 'EdgeColor', 'None', 'FaceColor', 'interp');
+scatter3(Rf,Sf,RMSf,'filled','MarkerFaceColor',[217 83 25]/255)
+scatter3(Rf,Sf,RMS2nd_Rf,'filled','MarkerFaceColor',[217 83 25]/255)
+
 xlabel('Range'); ylabel('Strength');
 set(gca, 'YScale', 'log');
 legend({'RMS map' 'Gradient along R' 'Gradient 2nd along R'})
 saveas(gcf,'RMSmap_plus_gradsR.png');
-saveas(gcf,'RMSmap_plus_gradsS.png');
+saveas(gcf,'RMSmap_plus_gradsR.fig');
 
 % display full map
 figure
@@ -222,7 +252,12 @@ yyaxis right
 plot(errorS);
 legend({'RMS interpolation S' 'Gradient along S' 'Second order gradient' 'Local measurement error {\surd} (1/f'''')'})
 saveas(gcf,'1D_example.png');
-saveas(gcf,'2D_example.fig');
+saveas(gcf,'1D_example.fig');
+
+
+
+
+
 
 end
 
