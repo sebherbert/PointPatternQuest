@@ -10,6 +10,8 @@ clear
 PARAMS = {};
 PARAMS.version = 'version0p0p1';
 
+PARAMS.verbose = 1;
+
 % Datafile parameters
 PARAMS.dataFile.input = uipickfiles('Prompt',...
     'Select the correct file to analyse (example: liveDataDmCurated.mat)');
@@ -45,6 +47,8 @@ PARAMS.movie.dt = NaN; % To be filled up after
 
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PARAMETERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+tic
 
 %% Load file table of all cells % expecting only 1 file for the moment
 % File is a n*8 table of the (PositionX, PositionY,PositionZ, Unit, Time, ID, cellType, oldID)

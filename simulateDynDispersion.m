@@ -2,8 +2,8 @@
 function outSimObjects = simulateDynDispersion(PARAMS,popSource,popTarget,popPermut,effect)
 % Simulates the expected dispersion for a population among an other
 % population based on the parameters Range and Strength of the effect.
-% WARNING! Is NOT meant to sustain a large amount of targets, will 
-% otherwise consume too much memory! 
+% WARNING! Is NOT meant to sustain a large amount of targets, will
+% otherwise consume too much memory!
 %{
 INPUT:
 PARAMS - Structure of relevant parameters
@@ -31,20 +31,22 @@ probMap = adaptProbMap(popSource, popPermut, effect, probMap);
 
 popPermut.proba = probMap.proba;
 
-for permutation = 1:PARAMS.anaGlobal.nPermut % Will become a parfor at some point!
+samePop = false; % Is the popSource taken from the popPermut => Same pop & same tp
+
+parfor perm = 1:PARAMS.anaGlobal.numPermut % Will become a parfor at some point!
     
-    if mod(perm,500) == 0
-        fprintf('Running permutation %d\n',perm);
-    end
+    %     if mod(perm,500) == 0
+    %         fprintf('Running permutation %d\n',perm);
+    %     end
     
-    simulatedPopTargetIDs = simulateDispersionIDs(effect, popSource, popPermut, nTarget, PARAMS); % List of simulated population IDs
-    outSimObjects(permutation,:) = simulatedPopTargetIDs;
+    simulatedPopTargetIDs = simulateDispersionIDs(effect, popSource, popPermut, nTarget, samePop, PARAMS); % List of simulated population IDs
+    outSimObjects(perm,:) = simulatedPopTargetIDs;
 end
 
 end
 
-function simulatedPopTargetIDs = simulateDispersionIDs(effect, popSource, popPermut, nTarget, PARAMS)
-% Simulates random draws of the popTarget population among the popPermut
+function simulatedPopTargetIDs = simulateDispersionIDs(effect, popSource, popPermut, nTarget, samePop, PARAMS)
+% Simulates 1 random draw of the popTarget population among the popPermut
 % population, considering the effect of the popSource population on the
 % next draw.
 
@@ -52,46 +54,42 @@ IDsSimu = zeros(1,nTarget);
 
 % Initiate a probability map => prob = 1 for the permutable population and
 % 0 for the rest of the population
-popTargetSimu{perm} = table;
-%
-%     if PARAMS.samePop => As long as the time point can not be the same,
-%     it can not be the same population.
-%         % Requires adaptation of the popSource at every step + an adaptation at
-%         % every step of the draw
-%         for bioCell = 1:nTarget
-%             tempCell = datasample(NNExp,1,'Weights',probMap);
-%             % Take cell out of the permutable population
-%             % be careful at not putting it back at more than 0 by an attractive or repulsive effect !
-%             probMap(tempCell.cellID) = 0;
-%
-%             % Adapt the probability map of the other cells based on the draw.
-%             probMap = adaptProbMap(tempCell.cellID, probMap, cell2CellDist, effect);
-%
-%
-%             % Add the drawn cell to the complete simulated draw
-%             popTargetSimu{perm} = [popTargetSimu{perm};tempCell];
-%         end
-%         % In this case target and source populations are the same
-%         popSourceSimu{perm} = popTargetSimu{perm};
-%
-%     else
+popTargetSimu = {};
 
-%         
-%         % Then make a single draw without replacing the cells
-%         popTargetSimu{perm} = datasample(NNExp,nTarget,'Replace',false,'Weights',probMap);
-%         popSourceSimu{perm} = NNExp(NNExp.cellType == pops.popSource, :);
-%     end
-%     
-%     % Find the Nearest neighbours in the population
-%     dnSimu(:,perm) = findNN(popSourceSimu{perm}.pos3D, popTargetSimu{perm}.pos3D, PARAMS.samePop, pops);
-%     
-%     %     % Calculate the cdf histogram
-%     %     for i=1:size(PARAMS.binSize,2)
-%     %         Grand(perm,i)= sum(dnSimu(:,perm)<PARAMS.binSize(i)) / numel(dnSimu(:,perm));
-%     %     end
-% end
-
+if samePop % => As long as the time point can not be the same,
+    %    % it can not be the same population.
+    %         % Requires adaptation of the popSource at every step + an adaptation at
+    %         % every step of the draw
+    %         for bioCell = 1:nTarget
+    %             tempCell = datasample(NNExp,1,'Weights',probMap);
+    %             % Take cell out of the permutable population
+    %             % be careful at not putting it back at more than 0 by an attractive or repulsive effect !
+    %             probMap(tempCell.cellID) = 0;
+    %
+    %             % Adapt the probability map of the other cells based on the draw.
+    %             probMap = adaptProbMap(tempCell.cellID, probMap, cell2CellDist, effect);
+    %
+    %
+    %             % Add the drawn cell to the complete simulated draw
+    %             popTargetSimu{perm} = [popTargetSimu{perm};tempCell];
+    %         end
+    %         % In this case target and source populations are the same
+    %         popSourceSimu{perm} = popTargetSimu{perm};
+    
+else
+    % Then make a single draw without replacing the cells
+    simulatedPopTargetIDs = datasample(popPermut.ID,nTarget,'Replace',false,'Weights',popPermut.proba);
 end
+
+% Find the Nearest neighbours in the population
+% dnSimu(:,perm) = findNN(popSourceSimu{perm}.pos3D, popTargetSimu{perm}.pos3D, PARAMS.samePop, pops);
+
+%     % Calculate the cdf histogram
+%     for i=1:size(PARAMS.binSize,2)
+%         Grand(perm,i)= sum(dnSimu(:,perm)<PARAMS.binSize(i)) / numel(dnSimu(:,perm));
+%     end
+end
+
 
 function newProbMap = adaptProbMap(popSource, popPermut, effect, oriProbMap)
 % Adapt the draw probability map based on the desired effect, the drawned

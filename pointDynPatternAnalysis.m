@@ -1,11 +1,12 @@
 
-function analysisOut = pointDynPatternAnalysis(PARAMS,popSource,popTarget,popPermut)
+function [NNdistances, NNdispersion]= pointDynPatternAnalysis(PARAMS,popSource,popTarget,popPermut)
 
 % Test a temporal correlation in the appearance of a cell type compared to
 % the appearance of an other or similar cell type.
 
 % Associate experimental NNdistances
-NNdistances.exp = movieAnalysisNN(PARAMS,popSource,popTarget); % Doesn't depend on the RS pair
+NNdistances.exp = extractDynNN(PARAMS,popSource,popTarget); % Doesn't depend on the RS pair
+NNdispersion.exp = analyseDynNN(PARAMS, NNdistances.exp);
 
 if PARAMS.anaMap.doMap == 1
     
@@ -18,17 +19,40 @@ if PARAMS.anaMap.doMap == 1
         % Prepare output structure for the NNdistances with appropriate fieldnames
         pairString = sprintf('R%0.1f_S%0.2f',PARAMS.anaMap.RSpairs.Rs(RSpair), PARAMS.anaMap.RSpairs.Ss(RSpair));
         pairString = regexprep(pairString,'\.','p');
+        
+        if PARAMS.verbose > 0
+            fprintf('Calculating NN for %s\n', pairString);
+        end
 
-        % Call Simulator for each pairs asked to simulate the movie analysis with
+        % Call Simulator for each pairs asked to simulate the expectedcell dispersion with
         % specified RSpair
-        NNdistances.simus.(pairString) = movieAnalysisNN(PARAMS, popSource, popTarget, popPermut, RSpair);
+        NNdistances.simus.(pairString) = extractDynNN(PARAMS, popSource, popTarget, popPermut, RSpair);
         
-        % Create CDFs out of NNdistances ; format into proper shape
+        % Provide a formatted metric for comparing the different simulations and
+        % experimental results.
+        NNdispersion.simu.(pairString) = mergeDynNN(PARAMS, NNdistances.simus.(pairString));
+        
+        % Reproduce the original histogram from WS
+        
+        %         reproHistoWS()
+        
+        % Use an adapted metric for the map assessment: RMSE still?
+        
+        % foo = reshape(inNNdispersionSimu.deltaT4.allDistances,[],1);
+        % figure
+        % cdfplot(foo)
+        % hold on
+        % cdfplot(inNNdispersionExp.deltaT4.allDistances)
+
         
         
-        % create RMSE map
-        %         outMapAna =
+        
     end
+    
+    toc
+    
+    save(sprintf('%s/NNdistances',PARAMS.dataFile.path{1}),'NNdistances');
+    save(sprintf('%s/NNdispersion',PARAMS.dataFile.path{1}),'NNdispersion');
 end
 
 
@@ -42,10 +66,22 @@ end
 end
 
 
-
-function calculationRMSEMap()
-
-end
+%
+% function reproHistoWS(inNNdispersionExp, inNNdispersionSimu, deltaTOIs)
+% % This function aims a the reproduction of the already provided simu
+% % histogram vs exp average when no effect are set in the model.
+% % display only the deltaTOIs deltaT. (array of double)
+%
+% deltaTOI = 'deltaT1'; % delta Time Of Interest
+%
+%
+% figure
+% avExp = mean(inNNdispersionExp.(deltaTOI).allDistances);
+% hold on;
+% foo = histogram(inNNdispersionSimu.(deltaTOI).allDistances);
+% line([avExp, avExp], ylim, 'LineWidth', 2, 'Color', 'r');
+%
+% end
 
 function RSpairs = reformatRSpairs(RminmaxnSteps, SminmaxnSteps, Rlog, Slog)
 % reformat R and S settings into pairs for linear list handling
