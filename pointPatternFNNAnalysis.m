@@ -46,7 +46,7 @@ dnExp = findNN(popSource3Dpos, popTarget3Dpos, PARAMS.samePop, pops)';
 
 % If the range of the model has to be fitted to the cdf50 of the NN
 % distribution
-if PARAMS.useRangeCDF50 == 1 % Boolean to exchange the cdf 
+if PARAMS.useRangeCDF50 == 1 % Boolean to replace the fit RANGE initial value based on the cdf
     PARAMS.optiR0 = double(median(dnExp));
 end
 

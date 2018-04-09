@@ -22,45 +22,48 @@ PARAMS.dot2vst2 = 1;
 PARAMS.dot3vst3 = 1;
 PARAMS.dot3vst2 = 1;
 
-%% Global Display parameters
+%% Global Display parameters => activate or deactivate some displays
 PARAMS.dispDistrib_1 = 0;
 PARAMS.dispDensityMap_2 = 0;
 PARAMS.displayIndivCDF = 0; % => To display individual cdf vs model figures
 PARAMS.maxSizeCDF = 200; % maximum number of points on the cdf
 PARAMS.binSize = 0:0.1:100; % bin size for the ecdf => if force binning of ecdf in Âµm
-PARAMS.axis = [0 40 0 1];
-PARAMS.dispModelsOverlay = 0; % When different Range or Strength are tested 
+PARAMS.axis = [0 40 0 1]; % axes size for the CDF displays
+PARAMS.dispModelsOverlay = 0; % When different Range or Strength are tested (will output all of them!)
 
 %% Global saving parameters
-PARAMS.saveIndivModel = 0; % When different Range or Strength are tested
+PARAMS.saveIndivModel = 0; % When different Range or Strength are tested (they will be saved together in the end anyhow)
 PARAMS.suffix = '_t3vst2_RMS_2cellDia'; % add a suffix to the filename of the save;
-%'fittedModel' will be added automatically if doing an optimization.
+%'fittedModel' will be added automatically if doing an optimization!
 
 %% Optimization model parameters
-PARAMS.optimizePar = 0; % Do an automated search for the best parameters
-PARAMS.minFitRange = 5; % Minimum Range for the fitted model
-PARAMS.minFitStrength = 0; % Minimum Strength for the fitted model
+PARAMS.doOptimizePar = 0; % Do an automated search for the best parameters
+PARAMS.minFitRange = 5; % Minimum Range for the fitted model (the fit will not look further!)
+PARAMS.minFitStrength = 0; % Minimum Strength for the fitted model. Function will crash if <0 (the fit will not look further!)
 % Original values for the optimization function
 PARAMS.doVarFitInit = 0; % => optiR0 and optiS0 will be changing based on the folder name
-PARAMS.useRangeCDF50 = 1; % Boolean to exchange the cdf 
-PARAMS.optiR0 = 10; % µm Range => WARNING WILL BE OVERWRITTEN IF doVarFitInit
+PARAMS.useRangeCDF50 = 1; % Boolean to set the fit initial values based on the cdf 50% 
+PARAMS.optiR0 = 10; % µm Range => WARNING WILL BE OVERWRITTEN IF doVarFitInit or useRangeCDF50 
 PARAMS.optiS0 = 1; % Dispersion Strength  => WARNING WILL BE OVERWRITTEN IF doVarFitInit
-PARAMS.fitMaxIter = 10; % Nbr of iterations for the min search
-PARAMS.numPermut = 20; % Nbr of permutation for model estimation
+PARAMS.fitMaxIter = 200; % Nbr of iterations for the min search
+PARAMS.numPermut = 1000; % Nbr of permutation for model estimation
 PARAMS.doDisplayLiveFit = 0; % If you want to see the fit evolve live
 PARAMS.useRMSMaxDist = 1; % if you want to use only a part of the RMS (as a function of the NN)
 PARAMS.maxDistFactor = 2; % times the cellDiameter for the RMS limit.
 PARAMS.cellDiameter = nan; % Will be set in Analysis function
 
 %% Hard coded model parameters
+PARAMS.doRMSEmap = 0; % Do an automated search for the best parameters
 % Type of effect of a cell on its nearest neighbours can only be 'None',
 % 'Repulsion', 'Attraction'
 % Distance of effect of a cell on its neighbours
-% PARAMS.effectMultiRange = 5.1:0.2:30; % Can be multiple values
-PARAMS.effectMultiRange = 10:10:30; % Can be multiple values
+% PARAMS.effectMultiRange = 5.1:0.2:30; % Can be multiple values =>
+% thourough values used so far
+PARAMS.effectMultiRange = 10:10:30; % => for tests only
 PARAMS.effectRangeU = 'µm';
 % Strength of the effect of a cell on its neighbours
-% PARAMS.effectMultiStrength = logspace(log(1/16)/log(10),log(16)/log(10),17); % Can be multiple values
+% PARAMS.effectMultiStrength = logspace(log(1/16)/log(10),log(16)/log(10),17); 
+% Can be multiple values thourough values used so far
 PARAMS.effectMultiStrength = 0.5:0.5:2; % Can be multiple values
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% /PARAMETERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -135,7 +138,7 @@ disp(PARAMS.name);
 load([PARAMS.path,PARAMS.name,ext]);
 
 % Begin the PPA analysis for each model
-if PARAMS.optimizePar % aka if you want the fitted version
+if PARAMS.doOptimizePar % aka if you want the fitted version
     % Change the model type into a model name for output
     PARAMS.model  = 'fittedModel';
     dataCombinedModels.fittedModel = mainPPA(S, d123_1, x, y, z, PARAMS);
@@ -144,7 +147,7 @@ if PARAMS.optimizePar % aka if you want the fitted version
     
     save([PARAMS.path,PARAMS.name,PARAMS.brainPart,'_',PARAMS.model,PARAMS.suffix],'dataCombined');
 
-else % aka if you want an RMSE map
+elseif PARAMS.doRMSEmap % aka if you want an RMSE map
     for modelR = 1:numel(PARAMS.effectMultiRange)
         % For every range tested
         PARAMS.effectRange = PARAMS.effectMultiRange(modelR);
@@ -194,6 +197,8 @@ else % aka if you want an RMSE map
         % => Adapt Combine and compare ? Only the display part ?
         % => Just copy and modify it ? keep the KS tests ?
     end
+else
+    error('You have deselected both the RMSE map and the fit. No analysis done. Exiting.');
 end
 
 end
