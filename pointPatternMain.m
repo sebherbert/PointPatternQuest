@@ -29,7 +29,7 @@ PARAMS.displayIndivCDF = 0; % => To display individual cdf vs model figures
 PARAMS.maxSizeCDF = 200; % maximum number of points on the cdf
 PARAMS.binSize = 0:0.1:100; % bin size for the ecdf => if force binning of ecdf in µm
 PARAMS.axis = [0 40 0 1];
-PARAMS.dispModelsOverlay = 0; % When different Range or Strength are tested 
+PARAMS.dispModelsOverlay = 1; % When different Range or Strength are tested 
 
 %% Global saving parameters
 PARAMS.saveIndivModel = 0; % When different Range or Strength are tested
@@ -55,12 +55,12 @@ PARAMS.cellDiameter = nan; % Will be set in Analysis function
 % Type of effect of a cell on its nearest neighbours can only be 'None',
 % 'Repulsion', 'Attraction'
 % Distance of effect of a cell on its neighbours
-PARAMS.effectMultiRange = 5.1:0.2:30; % Can be multiple values
-% PARAMS.effectMultiRange = 10; % Can be multiple values
-PARAMS.effectRangeU = 'µm';
+% PARAMS.effectMultiRange = 5.1:0.2:30; % Can be multiple values
+PARAMS.effectMultiRange = 10:10:30; % Can be multiple values
+PARAMS.effectRangeU = '�m';
 % Strength of the effect of a cell on its neighbours
-PARAMS.effectMultiStrength = logspace(log(1/16)/log(10),log(16)/log(10),17); % Can be multiple values
-% PARAMS.effectMultiStrength = 1; % Can be multiple values
+% PARAMS.effectMultiStrength = logspace(log(1/16)/log(10),log(16)/log(10),17); % Can be multiple values
+PARAMS.effectMultiStrength = 0.5:0.5:2; % Can be multiple values
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% /PARAMETERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -143,7 +143,7 @@ if PARAMS.optimizePar % aka if you want the fitted version
     
     save([PARAMS.path,PARAMS.name,PARAMS.brainPart,'_',PARAMS.model,PARAMS.suffix],'dataCombined');
 
-else
+else % aka if you want an RMSE map
     for modelR = 1:numel(PARAMS.effectMultiRange)
         % For every range tested
         PARAMS.effectRange = PARAMS.effectMultiRange(modelR);
