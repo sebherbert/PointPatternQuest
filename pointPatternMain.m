@@ -33,7 +33,7 @@ PARAMS.dispModelsOverlay = 0; % When different Range or Strength are tested (wil
 
 %% Global saving parameters
 PARAMS.saveIndivModel = 0; % When different Range or Strength are tested (they will be saved together in the end anyhow)
-PARAMS.suffix = '_t3vst2_RMS_2cellDia'; % add a suffix to the filename of the save;
+PARAMS.suffix = '_RMS_2cellDia'; % add a suffix to the filename of the save;
 %'fittedModel' will be added automatically if doing an optimization!
 
 %% Optimization model parameters
@@ -53,18 +53,18 @@ PARAMS.maxDistFactor = 2; % times the cellDiameter for the RMS limit.
 PARAMS.cellDiameter = nan; % Will be set in Analysis function
 
 %% Hard coded model parameters
-PARAMS.doRMSEmap = 0; % Do an automated search for the best parameters
+PARAMS.doRMSEmap = 1; % Do an automated search for the best parameters
 % Type of effect of a cell on its nearest neighbours can only be 'None',
 % 'Repulsion', 'Attraction'
 % Distance of effect of a cell on its neighbours
-% PARAMS.effectMultiRange = 5.1:0.2:30; % Can be multiple values =>
+PARAMS.effectMultiRange = 5.1:0.2:30; % Can be multiple values =>
 % thourough values used so far
-PARAMS.effectMultiRange = 10:10:30; % => for tests only
+% PARAMS.effectMultiRange = 10:10:30; % => for tests only
 PARAMS.effectRangeU = 'µm';
 % Strength of the effect of a cell on its neighbours
-% PARAMS.effectMultiStrength = logspace(log(1/16)/log(10),log(16)/log(10),17); 
+PARAMS.effectMultiStrength = logspace(log(1/16)/log(10),log(16)/log(10),17); 
 % Can be multiple values thourough values used so far
-PARAMS.effectMultiStrength = 0.5:0.5:2; % Can be multiple values
+% PARAMS.effectMultiStrength = 0.5:0.5:2; % Can be multiple values
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% /PARAMETERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -94,7 +94,7 @@ filename = [PARAMS.name,ext];
 
 cd(PARAMS.path)
 
-if (PARAMS.doVarFitInit && PARAMS.optimizePar) % adapts fit initialization based on folder name
+if (PARAMS.doVarFitInit && PARAMS.doOptimizePar) % adapts fit initialization based on folder name
     folderIndexes = strfind(PARAMS.path,filesep) ;
     lastFolderName = PARAMS.path(folderIndexes(end-1)+1:folderIndexes(end)-1);
     if contains(lastFolderName,{'R','S'})

@@ -210,51 +210,51 @@ surf(allR, allS, mapRMS, 'EdgeColor', 'None', 'FaceColor', 'interp');
 % display the fitted position
 hold on
 scatter3(Rf,Sf,RMSf,'filled','MarkerFaceColor',[217 83 25]/255)
-xlabel('Range'); ylabel('Strength');
+xlabel('Range'); ylabel('Strength'); zlabel('RMSE');
 set(gca, 'YScale', 'log');
 saveas(gcf,'RMSmap_plus_fit.png');
 saveas(gcf,'RMSmap_plus_fit.fig');
 
-% display full map
-figure
-hold on
-surf(newAllR, newAllS, newMapRMS, 'EdgeColor', 'None', 'FaceColor', 'interp');
-surf(newAllR, newAllS, gr, 'EdgeColor', 'None', 'FaceColor', 'interp');
-surf(newAllR, newAllS, grr, 'EdgeColor', 'None', 'FaceColor', 'interp');
-scatter3(Rf,Sf,RMSf,'filled','MarkerFaceColor',[217 83 25]/255)
-scatter3(Rf,Sf,RMS2nd_Rf,'filled','MarkerFaceColor',[217 83 25]/255)
+% % display full map
+% figure
+% hold on
+% surf(newAllR, newAllS, newMapRMS, 'EdgeColor', 'None', 'FaceColor', 'interp');
+% surf(newAllR, newAllS, gr, 'EdgeColor', 'None', 'FaceColor', 'interp');
+% surf(newAllR, newAllS, grr, 'EdgeColor', 'None', 'FaceColor', 'interp');
+% scatter3(Rf,Sf,RMSf,'filled','MarkerFaceColor',[217 83 25]/255)
+% scatter3(Rf,Sf,RMS2nd_Rf,'filled','MarkerFaceColor',[217 83 25]/255)
+% 
+% xlabel('Range'); ylabel('Strength');
+% set(gca, 'YScale', 'log');
+% legend({'RMS map' 'Gradient along R' 'Gradient 2nd along R'})
+% saveas(gcf,'RMSmap_plus_gradsR.png');
+% saveas(gcf,'RMSmap_plus_gradsR.fig');
 
-xlabel('Range'); ylabel('Strength');
-set(gca, 'YScale', 'log');
-legend({'RMS map' 'Gradient along R' 'Gradient 2nd along R'})
-saveas(gcf,'RMSmap_plus_gradsR.png');
-saveas(gcf,'RMSmap_plus_gradsR.fig');
+% % display full map
+% figure
+% hold on
+% surf(newAllR, newAllS, newMapRMS, 'EdgeColor', 'None', 'FaceColor', 'interp');
+% surf(newAllR, newAllS, gs, 'EdgeColor', 'None', 'FaceColor', 'interp');
+% surf(newAllR, newAllS, gss, 'EdgeColor', 'None', 'FaceColor', 'interp');
+% scatter3(Rf,Sf,RMSf,'filled','MarkerFaceColor',[217 83 25]/255)
+% scatter3(Rf,Sf,RMS2nd_Sf,'filled','MarkerFaceColor',[217 83 25]/255)
+% xlabel('Range'); ylabel('Strength');
+% set(gca, 'YScale', 'log');
+% legend({'RMS map' 'Gradient along S' 'Gradient 2nd along S'})
+% saveas(gcf,'RMSmap_plus_gradsS.png');
+% saveas(gcf,'RMSmap_plus_gradsS.fig');
 
-% display full map
-figure
-hold on
-surf(newAllR, newAllS, newMapRMS, 'EdgeColor', 'None', 'FaceColor', 'interp');
-surf(newAllR, newAllS, gs, 'EdgeColor', 'None', 'FaceColor', 'interp');
-surf(newAllR, newAllS, gss, 'EdgeColor', 'None', 'FaceColor', 'interp');
-scatter3(Rf,Sf,RMSf,'filled','MarkerFaceColor',[217 83 25]/255)
-scatter3(Rf,Sf,RMS2nd_Sf,'filled','MarkerFaceColor',[217 83 25]/255)
-xlabel('Range'); ylabel('Strength');
-set(gca, 'YScale', 'log');
-legend({'RMS map' 'Gradient along S' 'Gradient 2nd along S'})
-saveas(gcf,'RMSmap_plus_gradsS.png');
-saveas(gcf,'RMSmap_plus_gradsS.fig');
-
-% Example of a fit in S
-figure
-hold on
-plot(RMSf_interS)
-plot(gradS)
-plot(gradSS)
-yyaxis right
-plot(errorS);
-legend({'RMS interpolation S' 'Gradient along S' 'Second order gradient' 'Local measurement error {\surd} (1/f'''')'})
-saveas(gcf,'1D_example.png');
-saveas(gcf,'1D_example.fig');
+% % Example of a fit in S
+% figure
+% hold on
+% plot(RMSf_interS)
+% plot(gradS)
+% plot(gradSS)
+% yyaxis right
+% plot(errorS);
+% legend({'RMS interpolation S' 'Gradient along S' 'Second order gradient' 'Local measurement error {\surd} (1/f'''')'})
+% saveas(gcf,'1D_example.png');
+% saveas(gcf,'1D_example.fig');
 
 
 
