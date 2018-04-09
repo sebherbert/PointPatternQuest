@@ -1,6 +1,6 @@
 
 function displayModelSerie(dataCombinedModels, PARAMS)
-% Display all overlayed models with experimental data
+% Display all overlayed models with experimental data as cdfs
 
 % List tested models
 fooFields = fieldnames(dataCombinedModels);

@@ -27,8 +27,8 @@ conds = {'Young','Old','Drug'}; % Conditions to be tested => CHECK THE ORDER WIT
 
 % temp = load('/media/sherbert/Data/Projects/OG_projects/Project6_ND_distribPattern/dataFolder/loader.mat'); % temporary
 
-% tempFold = uipickfiles('Prompt','Please, select the output folder');
-tempFold = {'/media/sherbert/Data/Projects/OG_projects/Project6_ND_distribPattern/dataFolder/test'};
+tempFold = uipickfiles('Prompt','Please, select the output folder');
+% tempFold = {'/media/sherbert/Data/Projects/OG_projects/Project6_ND_distribPattern/dataFolder/test'};
 PARAMS.outputFold = [tempFold{1} filesep];
 
 

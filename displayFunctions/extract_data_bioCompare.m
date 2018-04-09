@@ -1,6 +1,10 @@
 
 
-function extract_data_bioCompare
+function extract_data_bioCompare()
+% This function will fetch the meaning values in all of the possible
+% samples and merge them together for simpler metric visualisation
+
+
 
 fetchError = 1; % Use if error estimation has already been done
 

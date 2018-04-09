@@ -1,5 +1,8 @@
 
-%% explore RMS map version v1p1
+
+function RMSmap_display()
+% This function displays the RMS map of any matrix of R and S values.
+% version v1p1
 
 % load ..._allModels.mat
 
@@ -50,4 +53,7 @@ set(gca, 'YTickLabel', ys)
 
 set( gca, 'XTick', get(gca, 'XTick') + 1)
 set( gca, 'XTickLabel', num2str( x( get(gca, 'XTick') ) ) )
+
+
+end
 
