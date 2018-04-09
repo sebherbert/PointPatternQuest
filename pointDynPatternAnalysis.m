@@ -1,23 +1,30 @@
 
-function [NNdistances, NNdispersion]= pointDynPatternAnalysis(PARAMS,popSource,popTarget,popPermut)
+function [NNdistances, NNdispersion, NNana] = pointDynPatternAnalysis(PARAMS,popSource,popTarget,popPermut)
 
 % Test a temporal correlation in the appearance of a cell type compared to
 % the appearance of an other or similar cell type.
 
 % Associate experimental NNdistances
 NNdistances.exp = extractDynNN(PARAMS,popSource,popTarget); % Doesn't depend on the RS pair
-NNdispersion.exp = analyseDynNN(PARAMS, NNdistances.exp);
+NNdispersion.exp = mergeDynNN(PARAMS, NNdistances.exp);
 
-if PARAMS.anaMap.doMap == 1
+% Keep track of which pops are used as targets
+permutPopNames = cell2mat(unique(popPermut.cellType)');
+
+
+NNana = {};
+
+%% Do correlation map
+if PARAMS.anaMap.doMap
     
-    % Reformat R and S settings into pairs
+    % Reformat R and S settings into pairscdf
     PARAMS.anaMap.RSpairs = reformatRSpairs(PARAMS.anaMap.RminmaxnSteps, PARAMS.anaMap.SminmaxnSteps,...
         PARAMS.anaMap.Rlog, PARAMS.anaMap.Slog);   
     
     for RSpair = 1:numel(PARAMS.anaMap.RSpairs.Rs) % each R and S
 
         % Prepare output structure for the NNdistances with appropriate fieldnames
-        pairString = sprintf('R%0.1f_S%0.2f',PARAMS.anaMap.RSpairs.Rs(RSpair), PARAMS.anaMap.RSpairs.Ss(RSpair));
+        pairString = sprintf('R%0.1f_S%0.3f',PARAMS.anaMap.RSpairs.Rs(RSpair), PARAMS.anaMap.RSpairs.Ss(RSpair));
         pairString = regexprep(pairString,'\.','p');
         
         if PARAMS.verbose > 0
@@ -32,32 +39,56 @@ if PARAMS.anaMap.doMap == 1
         % experimental results.
         NNdispersion.simu.(pairString) = mergeDynNN(PARAMS, NNdistances.simus.(pairString));
         
-        % Reproduce the original histogram from WS
-        
-        %         reproHistoWS()
-        
+        % further analysis?
         % Use an adapted metric for the map assessment: RMSE still?
+        NNana.perRSpair.(pairString) = anaDynNN(PARAMS,NNdispersion.exp,NNdispersion.simu.(pairString));
         
-        % foo = reshape(inNNdispersionSimu.deltaT4.allDistances,[],1);
-        % figure
-        % cdfplot(foo)
-        % hold on
-        % cdfplot(inNNdispersionExp.deltaT4.allDistances)
-
-        
-        
+        % Reproduce the original histogram from WS
+        if ((PARAMS.display.reproHistoWS.do) && (PARAMS.anaMap.RSpairs.Ss(RSpair) == 1))
+            reproHistoWS(NNdispersion.exp, NNdispersion.simu.(pairString), PARAMS.display.deltaTOIs, permutPopNames);
+            PARAMS.display.reproHistoWS.do = 0;
+        end
         
     end
     
     toc
+
+    % Display the populations
+    %     NNdisplays = {}; % Initialize structure
+    DTfields = fieldnames(NNdispersion.exp); % Max number of Δt in the movie (frame-1)
+
+    PARAMS.anaMap.uniqR = unique(PARAMS.anaMap.RSpairs.Rs);
+    PARAMS.anaMap.uniqS = unique(PARAMS.anaMap.RSpairs.Ss);
+
+    for DTfield = PARAMS.display.deltaTOIs(1):PARAMS.display.deltaTOIs(end) % interesting Δts
+        % Reparse the different pairs of R and S for the display (to keep things separated...)        
+                
+        if PARAMS.anaGlobal.doRMSE 
+            % Reshape and add further analyses per deltaT
+            NNana.perDeltaT.(DTfields{DTfield}).RMSE = reshapeMap(PARAMS, ...
+                NNana, 'RMSE', PARAMS.anaMap.uniqS, PARAMS.anaMap.uniqR, (DTfields{DTfield}));
+            statTest = 'RMSE';
+        end
+    end
     
-    save(sprintf('%s/NNdistances',PARAMS.dataFile.path{1}),'NNdistances');
-    save(sprintf('%s/NNdispersion',PARAMS.dataFile.path{1}),'NNdispersion');
+    if PARAMS.display.NNmap % Launch display of maps
+        displayDynNNmap(PARAMS, PARAMS.anaMap.uniqR, PARAMS.anaMap.uniqS,...
+            DTfields, statTest, permutPopNames, NNana.perDeltaT);
+    end
+    if PARAMS.display.NNisoMap.do % Launch display of iso maps
+        displayDynNNisomap(PARAMS, PARAMS.anaMap.uniqR, PARAMS.anaMap.uniqS,...
+            DTfields, statTest, permutPopNames, NNana.perDeltaT);
+    end
+    
+        
+    save(sprintf('%s/NNdistances',PARAMS.dataFile.currentPath),'NNdistances');
+    save(sprintf('%s/NNdispersion',PARAMS.dataFile.currentPath),'NNdispersion');
+    save(sprintf('%s/NNanalysis',PARAMS.dataFile.currentPath),'NNana');    
 end
 
 
-
-if PARAMS.anaSearch.doMinSearch == 1
+%% Do search function
+if PARAMS.anaSearch.doMinSearch
     % Call Simulator search tool
     fprintf('Section under construction...');
 end
@@ -66,22 +97,59 @@ end
 end
 
 
-%
-% function reproHistoWS(inNNdispersionExp, inNNdispersionSimu, deltaTOIs)
-% % This function aims a the reproduction of the already provided simu
-% % histogram vs exp average when no effect are set in the model.
-% % display only the deltaTOIs deltaT. (array of double)
-%
-% deltaTOI = 'deltaT1'; % delta Time Of Interest
-%
-%
-% figure
-% avExp = mean(inNNdispersionExp.(deltaTOI).allDistances);
-% hold on;
-% foo = histogram(inNNdispersionSimu.(deltaTOI).allDistances);
-% line([avExp, avExp], ylim, 'LineWidth', 2, 'Color', 'r');
-%
-% end
+
+function outNNana = reshapeMap(PARAMS, NNana, statTest, Ss, Rs, DTfieldName)
+% Adds a structure to the analysis organized per deltaT instead of RS pair
+% the statistical test represents an individual field
+
+outNNana = {};
+
+RSfieldNames = fieldnames(NNana.perRSpair);
+for RSpair = 1:numel(PARAMS.anaMap.RSpairs.Rs) % each R and S
+
+    outNNana.map(RSpair) = NNana.perRSpair.(RSfieldNames{RSpair}).(statTest).(DTfieldName).(statTest);
+    
+end % endfor RSpair
+
+outNNana.map = reshape(outNNana.map, numel(Ss), numel(Rs));
+[outNNana.minSloc, outNNana.minRloc] = find(outNNana.map == min(outNNana.map(:)));
+outNNana.minSval = Ss(outNNana.minSloc);
+outNNana.minRval = Rs(outNNana.minRloc);
+outNNana.minVal = outNNana.map(outNNana.minSloc, outNNana.minRloc);
+
+end
+
+
+
+function reproHistoWS(inNNdispersionExp, inNNdispersionSimu, deltaTOIs, permutPopNames)
+% This function aims a the reproduction of the already provided simu
+% histogram vs exp average when no effect are set in the model.
+% display only the deltaTOIs deltaT. (array of double)
+
+figure
+
+numSubP = numSubplots(numel(deltaTOIs));
+
+for deltaN = 1:numel(deltaTOIs)
+    subplot(numSubP(1),numSubP(2),deltaN)
+    
+    deltaTOI = sprintf('deltaT%d',deltaTOIs(deltaN)); % delta Time Of Interest
+
+    avExp = mean(inNNdispersionExp.(deltaTOI).allDistances);
+    hold on;
+    histogram(inNNdispersionSimu.(deltaTOI).allDistances);
+    line([avExp, avExp], ylim, 'LineWidth', 2, 'Color', 'r');
+    
+    title(sprintf('NN for deltat=%dtp', deltaTOIs(deltaN)))
+    xlabel('Distance (µm)'); ylabel('# sim N');
+    
+    legend({'simulated data' sprintf('exp av = %0.1fµm',avExp)})
+end
+
+saveas(gcf,sprintf('reproHistWS_%s).fig',permutPopNames));
+
+end
+
 
 function RSpairs = reformatRSpairs(RminmaxnSteps, SminmaxnSteps, Rlog, Slog)
 % reformat R and S settings into pairs for linear list handling

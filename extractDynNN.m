@@ -28,7 +28,7 @@ switch nargin
         end
         doSimulation = false;
     case 5 % additional info for RSpairs and popPermut
-        if PARAMS.verbose > 1
+        if PARAMS.verbose > 1 
             fprintf('Calculating NN for simulated data\n');
         end
         doSimulation = true;
