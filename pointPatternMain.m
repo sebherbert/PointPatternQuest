@@ -15,7 +15,7 @@ clear
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PARAMETERS/ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 PARAMS = {};
-PARAMS.version = 'version0p1p9';
+PARAMS.version = 'version1p0p0';
 
 %% Which cell type distribution effect to test
 PARAMS.dot2vst2 = 0;
