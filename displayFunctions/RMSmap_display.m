@@ -1,11 +1,15 @@
 
 
 function RMSmap_display()
-% This function displays the RMS map of any matrix of R and S values.
-% version v1p1
+% DEPRECATED: This function displays the RMS map of any matrix of R and S values as a
+% 2D plot.
+% version v1p1 => Currently not working with variable input size... 
 
-% load ..._allModels.mat
+% Select a file containing th RMSE map (named dataCombinedModels)
+fileToOpen = uipickfiles('Prompt','Please, select the correct file to analyse','FilterSpec','*.mat','REDirs',0,'numfiles',1);
 
+% Load the RMSE map file
+load(fileToOpen{1});
 
 % get list of models
 fieldList = fieldnames(dataCombinedModels);
@@ -22,7 +26,7 @@ for field = 1:numel(fieldList) % for each field
     end
 end
 variableNames = {'Range','Strength','finalRMS'};
-allModels.Properties.VariableNames = variableNames;
+allModels.Properties.VariableNames = variableNames; 
 
 
 %% Display RMS map
@@ -34,7 +38,7 @@ imagesc(X, Y, allModels.finalRMS)
 
 map = colormap(parula(1024));
 minmaxRMS = (allModels.finalRMS-min(allModels.finalRMS))/(max(allModels.finalRMS)-min(allModels.finalRMS));
-imshow(reshape(minmaxRMS,[17,125])*length(map),map)
+imshow(reshape(minmaxRMS,[Y(1),Y(2)])*length(map),map)
 
 scatter(allModels.Range,allModels.Strength,90,allModels.finalRMS,'filled');
 

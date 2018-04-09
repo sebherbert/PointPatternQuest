@@ -1,10 +1,12 @@
 
-function errorRMSmap
+function errorRMSmap()
+% displays the RMSE map 
+
 % Calculate hessian matrix and second order partial derivatives at the
 % point of interest
 % only works for t3vst2 for the moment, could be expanded
 
-% Pick all the folders of interest
+% Pick all the folders containing files of interest
 listFolders = uipickfiles('Prompt','Select folders to process');
 
 % Enter the proper regexp for file import
@@ -20,13 +22,13 @@ fileFitregexp = answer{2};
 % Loop through the different folders
 for folder = 1:numel(listFolders)
     
-    fprintf('Processing folder: %s', listFolders{folder});
+    fprintf('Processing folder: %s\n', listFolders{folder});
     
     close all
     % Go to the folder of interest
     cd(listFolders{folder})
     
-    % Check and load the first file
+    % Check and load the fit file
     fitFile = {};
     tempFitFile = dir (fileFitregexp);
     for file = 1:numel(tempFitFile)
@@ -35,17 +37,17 @@ for folder = 1:numel(listFolders)
         end
     end
     if numel(fitFile)~=1
-        fprintf('Error (2) in folder: %s\n',listFolders{folder});
+        fprintf('Error too many fits in folder: %s\n',listFolders{folder});
         continue
     else
         fitData = load(fitFile{1}.name);
         fitField = fieldnames(fitData);
     end
     
-    % Check and load the first file
+    % Check and load the RMS file
     RMSfile = dir (fileRMSMapregexp);
     if numel(RMSfile)~=1
-        fprintf('Error (1) in folder: %s\n',listFolders{folder});
+        fprintf('Error too many RMSE files in folder: %s\n',listFolders{folder});
         continue
     else
         RMSdata = load(RMSfile.name);
@@ -58,7 +60,7 @@ for folder = 1:numel(listFolders)
     if fitField{1} == 'dataCombined'
         dataCombined = fitData.(fitField{1});
     else
-        fprintf('Error (3) in folder: %s\n',listFolders{folder});
+        fprintf('Error in folder: %s. Expecting a dataCombined field\n',listFolders{folder});
         continue
     end
     [~, fileName, ~] = fileparts(fitFile{1}.name);

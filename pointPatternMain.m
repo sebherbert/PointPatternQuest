@@ -18,8 +18,8 @@ PARAMS = {};
 PARAMS.version = 'version1p0p0';
 
 %% Which cell type distribution effect to test
-PARAMS.dot2vst2 = 0;
-PARAMS.dot3vst3 = 0;
+PARAMS.dot2vst2 = 1;
+PARAMS.dot3vst3 = 1;
 PARAMS.dot3vst2 = 1;
 
 %% Global Display parameters
@@ -29,23 +29,24 @@ PARAMS.displayIndivCDF = 0; % => To display individual cdf vs model figures
 PARAMS.maxSizeCDF = 200; % maximum number of points on the cdf
 PARAMS.binSize = 0:0.1:100; % bin size for the ecdf => if force binning of ecdf in µm
 PARAMS.axis = [0 40 0 1];
-PARAMS.dispModelsOverlay = 1; % When different Range or Strength are tested 
+PARAMS.dispModelsOverlay = 0; % When different Range or Strength are tested 
 
 %% Global saving parameters
 PARAMS.saveIndivModel = 0; % When different Range or Strength are tested
-PARAMS.suffix = '_t3vst2_RMSMap_3cellDia'; % add a suffix to the filename of the save
+PARAMS.suffix = '_t3vst2_RMS_2cellDia'; % add a suffix to the filename of the save;
+%'fittedModel' will be added automatically if doing an optimization.
 
 %% Optimization model parameters
 PARAMS.optimizePar = 0; % Do an automated search for the best parameters
 PARAMS.minFitRange = 5; % Minimum Range for the fitted model
 PARAMS.minFitStrength = 0; % Minimum Strength for the fitted model
 % Original values for the optimization function
-PARAMS.doVarFitInit = 0; % => optiR0 and optiS0 will be changing the folder name
+PARAMS.doVarFitInit = 0; % => optiR0 and optiS0 will be changing based on the folder name
 PARAMS.useRangeCDF50 = 1; % Boolean to exchange the cdf 
-PARAMS.optiR0 = 10; % µm Range => WARNING WILL BE OVERWRITTEN IF doVarFitInit
+PARAMS.optiR0 = 10; % �m Range => WARNING WILL BE OVERWRITTEN IF doVarFitInit
 PARAMS.optiS0 = 1; % Dispersion Strength  => WARNING WILL BE OVERWRITTEN IF doVarFitInit
-PARAMS.fitMaxIter = 200; % Nbr of iterations for the min search
-PARAMS.numPermut = 1000; % Nbr of permutation for model estimation
+PARAMS.fitMaxIter = 10; % Nbr of iterations for the min search
+PARAMS.numPermut = 20; % Nbr of permutation for model estimation
 PARAMS.doDisplayLiveFit = 0; % If you want to see the fit evolve live
 PARAMS.useRMSMaxDist = 1; % if you want to use only a part of the RMS (as a function of the NN)
 PARAMS.maxDistFactor = 2; % times the cellDiameter for the RMS limit.
