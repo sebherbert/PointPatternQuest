@@ -1,39 +1,52 @@
 
 
-function displayDynNNmap(PARAMS, Rs, Ss, DTfields, statTest, permutPopNames, inNNana)
+function displayDynNNmap(PARAMS, Rs, Ss, DTfields, statTest, permutPopNames, inNNana, doIso)
 % all maps of a specific stat test is displayed in a dedicated subplot for
-% each deltaT in a 3D surface
+% each deltaT in a 3D surface or an isosurface
 
 figure
 
-
 numSubP = numSubplots(numel(PARAMS.display.deltaTOIs));
+
+if doIso
+    isoStatus = 'iso';
+else
+    isoStatus = '';
+end
 
 % Display maps for each DeltaTs
 for DTfield = PARAMS.display.deltaTOIs(1):PARAMS.display.deltaTOIs(end)
-
     
-    %     displayDynNN(numSubP, DTfields, DTfield, Rs, Ss,...
-    %         NNana.perDeltaT.(DTfields{DTfield}).(statTest), statTest);
+    statMap = reshape(inNNana.(DTfields{DTfield}).(statTest).map, numel(Ss), numel(Rs));
     
     subplot(numSubP(1),numSubP(2),DTfield)
     hold on
-    surf(Rs, Ss, reshape(inNNana.(DTfields{DTfield}).(statTest).map, numel(Ss), numel(Rs)),...
-        'EdgeColor', 'None'); %  'FaceColor', 'interp'
+    
     scatter3(inNNana.(DTfields{DTfield}).(statTest).minRval,...
         inNNana.(DTfields{DTfield}).(statTest).minSval,...
         inNNana.(DTfields{DTfield}).(statTest).minVal , 'filled','MarkerFaceColor',[217 83 25]/255);
-    title(DTfields{DTfield});
-    xlabel('Range'); ylabel('Strength');
+    
+    if doIso
+        contour(Rs, Ss, statMap);
+    else
+        %         surf(Rs, Ss, statMap, 'EdgeColor', 'None'); %  'FaceColor', 'interp'
+        surf(Rs, Ss, statMap, 'EdgeColor', 'None', 'FaceColor', 'interp'); 
+    end
+    
+    legend({sprintf('GlobMin= %0.3f', inNNana.(DTfields{DTfield}).(statTest).minVal)...
+        sprintf('%s %smap',statTest, isoStatus)}, 'Location', 'northeast');
+
+    title(sprintf('%s, N=%d',DTfields{DTfield},inNNana.(DTfields{DTfield}).exp.Ncells));
+    xlabel('Range (\mum)'); ylabel('Strength');
     set(gca, 'YScale', 'log');
-    legend({sprintf('%s map',statTest) sprintf('Global minimum = %0.3f',...
-        inNNana.(DTfields{DTfield}).(statTest).minVal)},...
-        'Location', 'northeast');
+
     colorbar
 
 end
 
-saveas(gcf,sprintf('%smap_permutIn_%s.fig',statTest, permutPopNames));
+if ~PARAMS.dummy
+    saveas(gcf,sprintf('%s%smap_permutIn_%s.fig',statTest, isoStatus, permutPopNames));
+end
 
 end
 

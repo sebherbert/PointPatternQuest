@@ -8,9 +8,11 @@ clear
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PARAMETERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Function parameters
 PARAMS = {};
-PARAMS.version = 'version0p0p1';
+PARAMS.version = 'version1p0p0';
 
 PARAMS.verbose = 1;
+
+PARAMS.dummy = 1; % do not save anything
 
 % Datafile parameters
 PARAMS.dataFile.input = uipickfiles('Prompt',...
@@ -25,24 +27,27 @@ PARAMS.pops.Properties.VariableNames = {'popSource' 'popTarget' 'popPermut'};
 
 % Analysis parameters
 PARAMS.anaGlobal.numPermut = 10000; % Number of random permutations
-PARAMS.anaGlobal.doRMSE = 1; % test for RMSE between experimental and simulation curves
+PARAMS.anaGlobal.doRMSE = 1; % Test for RMSE between experimental and simulation curves
 % Correlation map
-PARAMS.anaMap.doMap = 1; % do the correlation map
-PARAMS.anaMap.RminmaxnSteps = [5 50 19]; % R min value, max value, number of steps
-PARAMS.anaMap.SminmaxnSteps = [1/64 64 21]; % S min value, max value, number of steps
+PARAMS.anaMap.doMap = 1; % Process the correlation map
+PARAMS.anaMap.loadMap = 1; % If the simulation has already been done and just needs display
+PARAMS.anaMap.saveOutputMat = 0; % Save the output mat files
+PARAMS.anaMap.RminmaxnSteps = [5 50 19]; % 19 R min value, max value, number of steps
+PARAMS.anaMap.SminmaxnSteps = [1/64 64 13]; % 25 S min value, max value, number of steps
 PARAMS.anaMap.Rlog = false; % If you want to have a logarithmic scale in R
 PARAMS.anaMap.Slog = true; % If you want to have a logarithmic scale in S
-% 
+% Optimization function
 PARAMS.anaSearch.doMinSearch = 0; % => min search protocol
 
 % Movie parameters
 PARAMS.movie.maxTp = NaN; % To be filled up after loading the movie
-PARAMS.movie.minTp = NaN;
+PARAMS.movie.minTp = NaN; % To be filled up after loading the movie (if for some reason tp1 is ~= 1...)
 PARAMS.movie.dt = NaN; % To be filled up after  
 
-% Display parameters
+% Display parameters - map analysis
 PARAMS.display.deltaTOIs = [1 2 3 4 5 6];
 PARAMS.display.reproHistoWS.do = 1;
+PARAMS.display.reproHistoWS.useAllPermut = 1; % Will merge all the S=1 simulations
 PARAMS.display.NNmap = 1;
 PARAMS.display.NNisoMap.do = 1;
 PARAMS.display.NNisoMap.interFactor = 5; % If you want to interpolate
@@ -133,16 +138,19 @@ for anaSeq = 1:height(PARAMS.pops) % => for each analysis sequence
     end
     
     % Launch the pattern analysis
-    [NNdistances, NNdispersion, NNana] = ...
+    [NNdistances, NNdispersion, NNana, NNPARAMS] = ...
         pointDynPatternAnalysis(PARAMS,popSource,popTarget,popPermut);
        
     % Merge to previous analyses
     completeAnalysis.NNdistances = NNdistances;
     completeAnalysis.NNdispersion = NNdispersion;
     completeAnalysis.NNana = NNana;
+    completeAnalysis.NNPARAMS = NNPARAMS;
     
     % Save PDPA
-    save('completeAnalysis','completeAnalysis');
+    if PARAMS.anaMap.saveOutputMat
+        save('completeAnalysis','completeAnalysis');
+    end
     
     % Go back to root folder
     cd(PARAMS.dataFile.currentPathRoot);

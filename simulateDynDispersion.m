@@ -33,7 +33,7 @@ popPermut.proba = probMap.proba;
 
 samePop = false; % Is the popSource taken from the popPermut => Same pop & same tp
 
-parfor perm = 1:PARAMS.anaGlobal.numPermut % Will become a parfor at some point!
+parfor perm = 1:PARAMS.anaGlobal.numPermut % 
     
     %     if mod(perm,500) == 0
     %         fprintf('Running permutation %d\n',perm);
