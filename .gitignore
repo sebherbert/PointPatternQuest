@@ -21,6 +21,9 @@ octave-workspace
 # Simulink autosave extension
 *.autosave
 
+# odt temporary saves
+.~lock*
+
 # Do not include old files in the git repo.
 oldScripts/
 
