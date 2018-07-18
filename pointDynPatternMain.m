@@ -8,7 +8,7 @@ clear
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PARAMETERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Function parameters
 PARAMS = {};
-PARAMS.version = 'version1p0p0';
+PARAMS.version = 'version1p0p1';
 
 PARAMS.verbose = 1;
 
@@ -20,24 +20,25 @@ PARAMS.dataFile.input = uipickfiles('Prompt',...
 
 % Population parameters => Add an additionnal line for each additionnal
 % analysis
+% Reminder that mother are duplicated in the type2!
 PARAMS.pops = table;
 PARAMS.pops = vertcat(PARAMS.pops,cell2table({{'mother'}, {'mother'}, {'type2'}}));
-PARAMS.pops = vertcat(PARAMS.pops,cell2table({{'mother'}, {'mother'}, {'type2';'type1'}}));
+PARAMS.pops = vertcat(PARAMS.pops,cell2table({{'mother'}, {'mother'}, {'type2';'type1'}})); 
 PARAMS.pops.Properties.VariableNames = {'popSource' 'popTarget' 'popPermut'};
 
 % Analysis parameters
-PARAMS.anaGlobal.numPermut = 10000; % Number of random permutations
+PARAMS.anaGlobal.numPermut = 10000; % Number of random permutations: Use 10000 for default
 PARAMS.anaGlobal.doRMSE = 1; % Test for RMSE between experimental and simulation curves
 % Correlation map
 PARAMS.anaMap.doMap = 1; % Process the correlation map
-PARAMS.anaMap.loadMap = 1; % If the simulation has already been done and just needs display
-PARAMS.anaMap.saveOutputMat = 0; % Save the output mat files
+PARAMS.anaMap.loadMap = 0; % If the simulation has already been done and just needs display
+PARAMS.anaMap.saveOutputMat = 1; % Save the output mat files
 PARAMS.anaMap.RminmaxnSteps = [5 50 19]; % 19 R min value, max value, number of steps
 PARAMS.anaMap.SminmaxnSteps = [1/64 64 13]; % 25 S min value, max value, number of steps
 PARAMS.anaMap.Rlog = false; % If you want to have a logarithmic scale in R
 PARAMS.anaMap.Slog = true; % If you want to have a logarithmic scale in S
 % Optimization function
-PARAMS.anaSearch.doMinSearch = 0; % => min search protocol
+PARAMS.anaSearch.doMinSearch = 0; % => automatic min search protocol
 
 % Movie parameters
 PARAMS.movie.maxTp = NaN; % To be filled up after loading the movie
@@ -47,10 +48,10 @@ PARAMS.movie.dt = NaN; % To be filled up after
 % Display parameters - map analysis
 PARAMS.display.deltaTOIs = [1 2 3 4 5 6];
 PARAMS.display.reproHistoWS.do = 1;
-PARAMS.display.reproHistoWS.useAllPermut = 1; % Will merge all the S=1 simulations
+PARAMS.display.reproHistoWS.useAllPermut = 1; % Will merge all the S=1 simulations for different R for the no effect pop
 PARAMS.display.NNmap = 1;
-PARAMS.display.NNisoMap.do = 1;
-PARAMS.display.NNisoMap.interFactor = 5; % If you want to interpolate
+PARAMS.display.NNisoMap.do = 1; % If you want to interpolate
+PARAMS.display.NNisoMap.interFactor = 5; % Interpolation factor
 
 
 
@@ -85,7 +86,6 @@ for exper = 1:numel(PARAMS.dataFile.input)
 
     % Call analysis launcher for each independant file
     completeAnalysis = PDPACaller(PARAMS, fullDataLive);
-    
 end
     
 toc
