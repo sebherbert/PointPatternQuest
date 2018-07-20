@@ -24,6 +24,7 @@ if PARAMS.anaMap.doMap
         if strcmp(fooFN{1},'completeAnalysis') % Check the data structure
             NNdistances = fooLoad.(fooFN{1}).NNdistances;
             NNdispersion = fooLoad.(fooFN{1}).NNdispersion;
+            fooLoad.(fooFN{1}).NNPARAMS.dummy = PARAMS.dummy; % force to update the dummy parameter to match the new call
             PARAMS = fooLoad.(fooFN{1}).NNPARAMS;
         else
             error('Expecting a "completeAnalysis" first field, check that the right file was selected. (pointDynPatternmain.m output)');
