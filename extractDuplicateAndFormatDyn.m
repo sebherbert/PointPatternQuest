@@ -43,7 +43,7 @@ spottype2 = spottype2(:,vars);
 % columns of Unit
 
 
-spotmother.cellTypeDm = [];
+% spotmother.cellTypeDm = [];
 
 % Add the cell type to the data table
 motherType = table(cell(height(spotmother),1),'VariableNames',{'cellType'});
