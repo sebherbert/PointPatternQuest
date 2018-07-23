@@ -12,7 +12,7 @@ PARAMS.version = 'version1p0p1';
 
 PARAMS.verbose = 1;
 
-PARAMS.dummy = 1; % do not save anything
+PARAMS.dummy = 0; % do not save anything
 
 % Datafile parameters
 PARAMS.dataFile.input = uipickfiles('Prompt',...
