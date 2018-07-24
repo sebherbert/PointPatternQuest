@@ -44,8 +44,8 @@ PARAMS.doVarFitInit = 0; % => optiR0 and optiS0 will be changing the folder name
 PARAMS.useRangeCDF50 = 1; % Boolean to exchange the cdf 
 PARAMS.optiR0 = 10; % µm Range => WARNING WILL BE OVERWRITTEN IF doVarFitInit
 PARAMS.optiS0 = 1; % Dispersion Strength  => WARNING WILL BE OVERWRITTEN IF doVarFitInit
-PARAMS.fitMaxIter = 200; % Nbr of iterations for the min search
-PARAMS.numPermut = 1000; % Nbr of permutation for model estimation
+PARAMS.fitMaxIter = 20; % Nbr of iterations for the min search % Default is 200
+PARAMS.numPermut = 100; % Nbr of permutation for model estimation % Default is 1000
 PARAMS.doDisplayLiveFit = 0; % If you want to see the fit evolve live
 PARAMS.useRMSMaxDist = 1; % if you want to use only a part of the RMS (as a function of the NN)
 PARAMS.maxDistFactor = 2; % times the cellDiameter for the RMS limit.
