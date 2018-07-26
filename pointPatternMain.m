@@ -15,7 +15,7 @@ clear
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PARAMETERS/ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 PARAMS = {};
-PARAMS.version = 'version0p1p9';
+PARAMS.version = 'version0p1p10';
 
 %% Which cell type distribution effect to test
 PARAMS.dot2vst2 = 0;
@@ -33,7 +33,7 @@ PARAMS.dispModelsOverlay = 0; % When different Range or Strength are tested
 
 %% Global saving parameters
 PARAMS.saveIndivModel = 0; % When different Range or Strength are tested
-PARAMS.suffix = '_t3vst2_RMSMap_3cellDia'; % add a suffix to the filename of the save
+PARAMS.suffix = '_t3vst2_RMSMap_2cellDia'; % add a suffix to the filename of the save
 
 %% Optimization model parameters
 PARAMS.optimizePar = 0; % Do an automated search for the best parameters
@@ -61,6 +61,11 @@ PARAMS.effectRangeU = 'µm';
 % Strength of the effect of a cell on its neighbours
 PARAMS.effectMultiStrength = logspace(log(1/16)/log(10),log(16)/log(10),17); % Can be multiple values
 % PARAMS.effectMultiStrength = 1; % Can be multiple values
+
+%% Merge cells that are too close together
+PARAMS.cellMerge.do = 1; % Do or do not
+PARAMS.cellMerge.cellType = {2}; % Which cell type?
+PARAMS.cellMerge.distThresh = 5; % Distance below which cells should be merged
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% /PARAMETERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -206,6 +211,9 @@ function dataCombined = mainPPA(S, d123_1, x, y, z, PARAMS)
 NNExp = table((1:length(S))',S',d123_1',[x,y,z]);
 NNExp.Properties.VariableNames = {'cellID','cellType','nearestNeighbour','pos3D'};
 
+% Merge cells that are too close together
+NNExp = mergeCloseCells(PARAMS, NNExp);
+
 % Point pattern analysis Type 2 effect on Type 2 in Type 1+2 (first neighbor)
 if PARAMS.dot2vst2
     pops.popSource = 2;
@@ -238,5 +246,118 @@ if PARAMS.dot3vst2
     fprintf('Running analysis %s\n',tAnalysis);
     dataCombined.(tAnalysis) = pointPatternFNNAnalysis(fullPath, NNExp, pops, PARAMS);
 end
+
+end
+
+
+function NNExp = mergeCloseCells(PARAMS, NNExp)
+
+for popOIs = 1:length(PARAMS.cellMerge.cellType)
+    cellType2merge = PARAMS.cellMerge.cellType{popOIs}; % specify cell type
+    % Simplify whole matrix to only keep the cell type of interest
+    cells2check = NNExp(NNExp.cellType == cellType2merge,:);
+    % Keep in check the max ID for additional merged cells
+    maxID = max(NNExp.cellID);
+    
+    % Measure all the distances between the cells
+    dists = pdist(cells2check.pos3D, 'euclidean');
+    
+    % Recreate the square form of the linear indexes and keep only a single occurence of each minimum
+    distSqBL = tril(squareform(dists)); 
+
+    % Only keep indexes for which dist<threshold
+    distSqBL(distSqBL>PARAMS.cellMerge.distThresh) = 0;
+    [row, col, values] = find(distSqBL);
+    
+    % Sort positions by smallest distances
+    [sortedValues, idxValues] = sort(values);
+    row = row(idxValues);
+    col = col(idxValues);
+    values = values(idxValues);
+    
+    % Find cell's ID associated to each pair
+    cellPairsID = [cells2check.cellID(row), cells2check.cellID(col)];
+    
+    % for each pair
+    mergedCells = cells2check(1,:);
+    mergedCells(1,:) = [];
+    
+    % Create new table to dump the new merged cells
+    mergedCells = cell2table(cell(0,width(NNExp)));
+    mergedCells.Properties.VariableNames = NNExp.Properties.VariableNames;
+
+    % Create new table to dump the deleted cells
+    deletedCells = cell2table(cell(0,width(NNExp)));
+    deletedCells.Properties.VariableNames = NNExp.Properties.VariableNames;
+    
+    for pair = 1:length(cellPairsID)
+        presentPair = cellPairsID(pair, :);
+        % check if both ID are still present
+        if (isempty(cells2check(cells2check.cellID == presentPair(1),:)) || ...
+                isempty(cells2check(cells2check.cellID == presentPair(2),:)))
+            continue % at least one has already been merged => Continue
+        else
+            % Add new merged cell
+            pos3D_1 = cells2check.pos3D(cells2check.cellID == presentPair(1), :);
+            pos3D_2 = cells2check.pos3D(cells2check.cellID == presentPair(2), :);
+            %             pdist2(pos3D_1, pos3D_2)
+
+            % Prepare new cell table holder
+            newPos3D = cell2table(cell(1,width(mergedCells)));
+            newPos3D.Properties.VariableNames = mergedCells.Properties.VariableNames;
+            
+            % Fill up new cell table holder
+            newPos3D.cellID = maxID + height(mergedCells) + 1;
+            newPos3D.cellType = cellType2merge;
+            newPos3D.nearestNeighbour = nan;
+            newPos3D.pos3D = mean([pos3D_1 ; pos3D_2]);
+            
+            % Merge it with rest of new cells
+            mergedCells = [mergedCells ; newPos3D];
+            
+            % Copy lines  from original table into a temporary file
+            deletedCells = [deletedCells ; cells2check(cells2check.cellID == presentPair(1),:)];
+            deletedCells = [deletedCells ; cells2check(cells2check.cellID == presentPair(2),:)];
+            
+            % Copy lines into a temporary file and delete them from original table
+            cells2check(cells2check.cellID == presentPair(1),:) = [];
+            cells2check(cells2check.cellID == presentPair(2),:) = [];
+        end
+    end
+    
+    % Merge back into population of interest
+    cells2check = [cells2check ; mergedCells];
+    
+    % Merge back into overall population
+    NNExp(NNExp.cellType == cellType2merge,:) = [];
+    NNExp = [NNExp; cells2check];
+    NNExp.cellID = [1:height(NNExp)]';
+    
+    %     figure
+    %     hold on
+    %     % Only deleted
+    %     scatter3(deletedCells.pos3D(:,1), deletedCells.pos3D(:,2), deletedCells.pos3D(:,3), 'or')
+    %     % Only created
+    %     scatter3(mergedCells.pos3D(:,1), mergedCells.pos3D(:,2), mergedCells.pos3D(:,3), 'ob')
+    %     % All the others
+    %     scatter3(cells2check.pos3D(:,1), cells2check.pos3D(:,2), cells2check.pos3D(:,3), 'ok')
+    %
+    %     for pairs = 1:length(cellPairsID)
+    %         plot3([NNExp.pos3D(NNExp.cellID == cellPairsID(pairs,1),1)...
+    %             NNExp.pos3D(NNExp.cellID == cellPairsID(pairs,2),1)], ...
+    %             [NNExp.pos3D(NNExp.cellID == cellPairsID(pairs,1),2)...
+    %             NNExp.pos3D(NNExp.cellID == cellPairsID(pairs,2),2)],...
+    %             [NNExp.pos3D(NNExp.cellID == cellPairsID(pairs,1),3)...
+    %             NNExp.pos3D(NNExp.cellID == cellPairsID(pairs,2),3)],...
+    %             'LineWidth',2)
+    %     end
+    %     axis equal
+    
+end
+
+% Update nearest neighbour field of the table
+newNNmat = squareform(pdist(NNExp.pos3D));
+newNNmat(newNNmat==0) = nan;
+NNExp.nearestNeighbour = min(newNNmat)';
 
 end

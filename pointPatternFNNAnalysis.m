@@ -26,7 +26,6 @@ Output:
 % Find the average cell size by averaging the minimum cell to cell distance
 PARAMS.cellDiameter = mean(NNExp.nearestNeighbour);
 
-
 %% Extract the 3D positions of the 2 cell populations of interest
 popSource3Dpos = table2array(NNExp(NNExp.cellType == pops.popSource, {'pos3D'}));
 
@@ -113,6 +112,7 @@ end
 fullResults.PARAMS = PARAMS;
 
 end
+
 
 function medRMS = evaluateRMS(expCDFs,simuCDFs,PARAMS)
 % Calculate the RMS between experimental and simulated curve f50pc
