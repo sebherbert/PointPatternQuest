@@ -53,7 +53,7 @@ end
 expCDFs = formatCdfsExp(dnExp, PARAMS);
 
 %% Use an optimisation function to find the most adapted strength and range parameters 
-if PARAMS.optimizePar
+if strcmp(PARAMS.model,'fittedModel')
     bestParams = optimizeParamsCall(NNExp, pops, rowPermut, nTarget, expCDFs,...
         PARAMS);
     fprintf('bestParams: Range = %0.1fµm ; Strength = %0.2f\n',bestParams(1),bestParams(2));
@@ -102,7 +102,7 @@ fullResults.dnExp = dnExp;
 fullResults.expCDFs = expCDFs;
 fullResults.dnSimu = dnSimu;
 fullResults.simuCDFs = simuCDFs;
-if PARAMS.optimizePar
+if strcmp(PARAMS.model,'fittedModel')
     fullResults.fit.Range = bestParams(1);
     fullResults.fit.Strength = bestParams(2);
     fullResults.fit.medRMS = medRMS;

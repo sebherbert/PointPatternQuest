@@ -33,10 +33,10 @@ PARAMS.dispModelsOverlay = 0; % When different Range or Strength are tested
 
 %% Global saving parameters
 PARAMS.saveIndivModel = 0; % When different Range or Strength are tested
-PARAMS.suffix = '_t3vst2_RMSMap_2cellDia'; % add a suffix to the filename of the save
+PARAMS.suffix = '_t3vst2'; % add a suffix to the filename of the save
 
-%% Optimization model parameters
-PARAMS.optimizePar = 0; % Do an automated search for the best parameters
+%% Optimization model parameters (fitting method)
+PARAMS.doOptimFit = 1; % Do an automated search for the best parameters
 PARAMS.minFitRange = 5; % Minimum Range for the fitted model
 PARAMS.minFitStrength = 0; % Minimum Strength for the fitted model
 % Original values for the optimization function
@@ -49,14 +49,19 @@ PARAMS.numPermut = 100; % Nbr of permutation for model estimation % Default is 1
 PARAMS.doDisplayLiveFit = 0; % If you want to see the fit evolve live
 PARAMS.useRMSMaxDist = 1; % if you want to use only a part of the RMS (as a function of the NN)
 PARAMS.maxDistFactor = 2; % times the cellDiameter for the RMS limit.
+if PARAMS.useRMSMaxDist % Automatically updates suffix name
+    PARAMS.suffix = sprintf('%s_max%dcellDia', PARAMS.suffix, PARAMS.maxDistFactor);
+end
 PARAMS.cellDiameter = nan; % Will be set in Analysis function
 
-%% Hard coded model parameters
+%% Hard coded model parameters (map method)
 % Type of effect of a cell on its nearest neighbours can only be 'None',
 % 'Repulsion', 'Attraction'
+
+PARAMS.doMapRMSE = 1; % Do a map of specific models
 % Distance of effect of a cell on its neighbours
-PARAMS.effectMultiRange = 5.1:0.2:30; % Can be multiple values
-% PARAMS.effectMultiRange = 10; % Can be multiple values
+% PARAMS.effectMultiRange = 5.1:0.2:30; % Can be multiple values => Default
+PARAMS.effectMultiRange = 5.1:2:20; %  => for dev values
 PARAMS.effectRangeU = 'µm';
 % Strength of the effect of a cell on its neighbours
 PARAMS.effectMultiStrength = logspace(log(1/16)/log(10),log(16)/log(10),17); % Can be multiple values
@@ -95,7 +100,7 @@ filename = [PARAMS.name,ext];
 
 cd(PARAMS.path)
 
-if (PARAMS.doVarFitInit && PARAMS.optimizePar) % adapts fit initialization based on folder name
+if (PARAMS.doVarFitInit && PARAMS.doOptimFit) % adapts fit initialization based on folder name
     folderIndexes = strfind(PARAMS.path,filesep) ;
     lastFolderName = PARAMS.path(folderIndexes(end-1)+1:folderIndexes(end)-1);
     if contains(lastFolderName,{'R','S'})
@@ -130,25 +135,30 @@ switch k
 end
 fprintf('Analysing the part of the brain: %s (case %d)\n',PARAMS.brainPart,k);
 
-dataCombinedModels = {};
-dataCombinedModels.name = PARAMS.name;
-dataCombinedModels.brainPart = PARAMS.brainPart;
-
 
 disp(PARAMS.name);
 load([PARAMS.path,PARAMS.name,ext]);
 
 % Begin the PPA analysis for each model
-if PARAMS.optimizePar % aka if you want the fitted version
+% if PARAMS.optimizePar % aka if you want the fitted version
+if PARAMS.doOptimFit % aka if you want the fitted version
     % Change the model type into a model name for output
     PARAMS.model  = 'fittedModel';
-    dataCombinedModels.fittedModel = mainPPA(S, d123_1, x, y, z, PARAMS);
 
-    dataCombined = dataCombinedModels.(PARAMS.model);
+    dataCombined_fitModel.data = mainPPA(S, d123_1, x, y, z, PARAMS);
+    dataCombined_fitModel.PARAMS = PARAMS;
+       
+    save([PARAMS.path,PARAMS.name,PARAMS.brainPart,PARAMS.suffix,'_',PARAMS.model],'dataCombined_fitModel');
+end
+
+if PARAMS.doMapRMSE
     
-    save([PARAMS.path,PARAMS.name,PARAMS.brainPart,'_',PARAMS.model,PARAMS.suffix],'dataCombined');
-
-else
+    dataCombined_RMSMap = {};
+    dataCombined_RMSMap.name = PARAMS.name;
+    dataCombined_RMSMap.brainPart = PARAMS.brainPart;
+    PARAMS.model  = 'RMSmap';
+    dataCombined_RMSMap.PARAMS = PARAMS;
+    
     for modelR = 1:numel(PARAMS.effectMultiRange)
         % For every range tested
         PARAMS.effectRange = PARAMS.effectMultiRange(modelR);
@@ -171,16 +181,16 @@ else
             PARAMS.model = sprintf('Model_T%s_R%s_S%s',PARAMS.effectType(1),...
                 tempRange,tempStrength);
             fprintf('\nProcessing model %s\n',PARAMS.model);
-            dataCombinedModels.(PARAMS.model) = mainPPA(S, d123_1, x, y, z, PARAMS);
+            dataCombined_RMSMap.(PARAMS.model) = mainPPA(S, d123_1, x, y, z, PARAMS);
             
-            dataCombinedModels.(PARAMS.model).name = PARAMS.name;
-            dataCombinedModels.(PARAMS.model).brainPart = PARAMS.brainPart;
-            dataCombinedModels.(PARAMS.model).effectType = PARAMS.effectType;
-            dataCombinedModels.(PARAMS.model).effectStrength = PARAMS.effectStrength;
-            dataCombinedModels.(PARAMS.model).effectRange = PARAMS.effectRange;
-            dataCombinedModels.(PARAMS.model).effectRangeU = PARAMS.effectRangeU;
+            dataCombined_RMSMap.(PARAMS.model).name = PARAMS.name;
+            dataCombined_RMSMap.(PARAMS.model).brainPart = PARAMS.brainPart;
+            dataCombined_RMSMap.(PARAMS.model).effectType = PARAMS.effectType;
+            dataCombined_RMSMap.(PARAMS.model).effectStrength = PARAMS.effectStrength;
+            dataCombined_RMSMap.(PARAMS.model).effectRange = PARAMS.effectRange;
+            dataCombined_RMSMap.(PARAMS.model).effectRangeU = PARAMS.effectRangeU;
             
-            dataCombined = dataCombinedModels.(PARAMS.model);
+            dataCombined = dataCombined_RMSMap.(PARAMS.model);
             
             if PARAMS.saveIndivModel
                 save([PARAMS.path,PARAMS.name,PARAMS.brainPart,'_',PARAMS.model],'dataCombined');
@@ -191,9 +201,10 @@ else
     
     if numel(PARAMS.effectMultiStrength)*numel(PARAMS.effectMultiRange) > 1
         if PARAMS.dispModelsOverlay
-            displayModelSerie(dataCombinedModels, PARAMS);
+            displayModelSerie(dataCombined_RMSMap, PARAMS);
         end
-        save([PARAMS.path,PARAMS.name,PARAMS.brainPart,PARAMS.suffix],'dataCombinedModels');
+        
+        save([PARAMS.path,PARAMS.name,PARAMS.brainPart,PARAMS.suffix, '_RMSMap'],'dataCombined_RMSMap');
         % (=> still gonna give 3analType*3brainPart / sample)
         % => Adapt Combine and compare ? Only the display part ?
         % => Just copy and modify it ? keep the KS tests ?
