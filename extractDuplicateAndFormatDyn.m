@@ -31,7 +31,7 @@ vars = opts.SelectedVariableNames;
 spottype1 = spottype1(:,vars);
 
 type2File = uipickfiles('Prompt',... % type2 file
-    'Select the data file containing the mother spots (ex: titi_dm_spot_type2.csv) to analyze', 'NumFile', 1);
+    'Select the data file containing the type2 spots (ex: titi_dm_spot_type2.csv) to analyze', 'NumFile', 1);
 % Delete empty columns
 opts = detectImportOptions(type2File{1});
 spottype2 = readtable(type2File{1},opts);
@@ -43,7 +43,7 @@ spottype2 = spottype2(:,vars);
 % columns of Unit
 
 
-% spotmother.cellTypeDm = [];
+spotmother.cellTypeDm = [];
 
 % Add the cell type to the data table
 motherType = table(cell(height(spotmother),1),'VariableNames',{'cellType'});
