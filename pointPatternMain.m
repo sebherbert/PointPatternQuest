@@ -18,8 +18,8 @@ PARAMS = {};
 PARAMS.version = 'version0p1p10';
 
 %% Which cell type distribution effect to test
-PARAMS.dot2vst2 = 0;
-PARAMS.dot3vst3 = 0;
+PARAMS.dot2vst2 = 1;
+PARAMS.dot3vst3 = 1;
 PARAMS.dot3vst2 = 1;
 
 %% Global Display parameters
@@ -33,7 +33,7 @@ PARAMS.dispModelsOverlay = 0; % When different Range or Strength are tested
 
 %% Global saving parameters
 PARAMS.saveIndivModel = 0; % When different Range or Strength are tested
-PARAMS.suffix = '_t3vst2'; % add a suffix to the filename of the save
+PARAMS.suffix = '_allTests'; % add a suffix to the filename of the save
 
 %% Optimization model parameters (fitting method)
 PARAMS.doOptimFit = 1; % Do an automated search for the best parameters
@@ -44,11 +44,11 @@ PARAMS.doVarFitInit = 0; % => optiR0 and optiS0 will be changing the folder name
 PARAMS.useRangeCDF50 = 1; % Boolean to exchange the cdf 
 PARAMS.optiR0 = 10; % µm Range => WARNING WILL BE OVERWRITTEN IF doVarFitInit
 PARAMS.optiS0 = 1; % Dispersion Strength  => WARNING WILL BE OVERWRITTEN IF doVarFitInit
-PARAMS.fitMaxIter = 20; % Nbr of iterations for the min search % Default is 200
-PARAMS.numPermut = 100; % Nbr of permutation for model estimation % Default is 1000
+PARAMS.fitMaxIter = 200; % Nbr of iterations for the min search % Default is 200
+PARAMS.numPermut = 1000; % Nbr of permutation for model estimation % Default is 1000
 PARAMS.doDisplayLiveFit = 0; % If you want to see the fit evolve live
 PARAMS.useRMSMaxDist = 1; % if you want to use only a part of the RMS (as a function of the NN)
-PARAMS.maxDistFactor = 2; % times the cellDiameter for the RMS limit.
+PARAMS.maxDistFactor = 3; % times the cellDiameter for the RMS limit.
 if PARAMS.useRMSMaxDist % Automatically updates suffix name
     PARAMS.suffix = sprintf('%s_max%dcellDia', PARAMS.suffix, PARAMS.maxDistFactor);
 end
@@ -60,8 +60,8 @@ PARAMS.cellDiameter = nan; % Will be set in Analysis function
 
 PARAMS.doMapRMSE = 1; % Do a map of specific models
 % Distance of effect of a cell on its neighbours
-% PARAMS.effectMultiRange = 5.1:0.2:30; % Can be multiple values => Default
-PARAMS.effectMultiRange = 5.1:2:20; %  => for dev values
+PARAMS.effectMultiRange = 5.1:0.2:30; % Can be multiple values => Default
+% PARAMS.effectMultiRange = 5.1:2:20; %  => for dev values
 PARAMS.effectRangeU = 'µm';
 % Strength of the effect of a cell on its neighbours
 PARAMS.effectMultiStrength = logspace(log(1/16)/log(10),log(16)/log(10),17); % Can be multiple values
@@ -301,7 +301,7 @@ for popOIs = 1:length(PARAMS.cellMerge.cellType)
     deletedCells = cell2table(cell(0,width(NNExp)));
     deletedCells.Properties.VariableNames = NNExp.Properties.VariableNames;
     
-    for pair = 1:length(cellPairsID)
+    for pair = 1:size(cellPairsID,1)
         presentPair = cellPairsID(pair, :);
         % check if both ID are still present
         if (isempty(cells2check(cells2check.cellID == presentPair(1),:)) || ...
