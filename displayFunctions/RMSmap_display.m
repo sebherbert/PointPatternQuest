@@ -1,11 +1,11 @@
 
-%% explore RMS map version v1p1
+%% explore RMS map version v2p1
 
-% load ..._allModels.mat
-
+% load ...dataCombined_RMSMap
+% CAUTION, will load the whole file into MATLAB, easily eating 60Go of RAM
 
 % get list of models
-fieldList = fieldnames(dataCombinedModels);
+fieldList = fieldnames(dataCombined_RMSMap);
 
 % get table of results
 allModels = table;
@@ -13,41 +13,31 @@ for field = 1:numel(fieldList) % for each field
     % Check if field is a model
     if contains(fieldList{field},'Model')
         allModels = vertcat(allModels, ...
-            table(dataCombinedModels.(fieldList{field}).effectRange, ...
-            dataCombinedModels.(fieldList{field}).effectStrength, ...
-            dataCombinedModels.(fieldList{field}).t3vst2.medRMS));
+            table(dataCombined_RMSMap.(fieldList{field}).effectRange, ...
+            dataCombined_RMSMap.(fieldList{field}).effectStrength, ...
+            dataCombined_RMSMap.(fieldList{field}).t3vst2.medRMS));
     end
 end
 variableNames = {'Range','Strength','finalRMS'};
 allModels.Properties.VariableNames = variableNames;
 
+% reshape final RMSE into a single 2D matrix
+RMSEmap = reshape(allModels.finalRMS,[numel(unique(allModels.Strength)),numel(unique(allModels.Range))]);
+Rangemap = reshape(allModels.Range,[numel(unique(allModels.Strength)),numel(unique(allModels.Range))]);
+Strengthmap = reshape(allModels.Strength,[numel(unique(allModels.Strength)),numel(unique(allModels.Range))]);
 
-%% Display RMS map
-figure
-X = [1,1];
-Y = [numel(unique(allModels.Strength)), numel(unique(allModels.Range))];
 
-imagesc(X, Y, allModels.finalRMS)
+% surf(Rs, Ss, statMap, 'EdgeColor', 'None', 'FaceColor', 'interp');
+surf(Rangemap, Strengthmap, RMSEmap, 'EdgeColor', 'None', 'FaceColor', 'interp');
 
-map = colormap(parula(1024));
-minmaxRMS = (allModels.finalRMS-min(allModels.finalRMS))/(max(allModels.finalRMS)-min(allModels.finalRMS));
-imshow(reshape(minmaxRMS,[17,125])*length(map),map)
+xlabel('Range (\mum)'); ylabel('Strength');
+set(gca, 'YScale', 'log');
 
-scatter(allModels.Range,allModels.Strength,90,allModels.finalRMS,'filled');
+colorbar
 
-c = colorbar;
-c.Label.String = 'RMS';
-caxis([0.02 0.5])
+az = 0;
+el = 90;
+view(az, el);
 
-hi = imagesc( c )
-xt = get(gca, 'XTick' )
-xs = num2str(x(xt))
-set(gca, 'XTickLabel', xs)
 
-yt = get(gca, 'YTick')
-ys = num2str(y(yt))
-set(gca, 'YTickLabel', ys)
-
-set( gca, 'XTick', get(gca, 'XTick') + 1)
-set( gca, 'XTickLabel', num2str( x( get(gca, 'XTick') ) ) )
 

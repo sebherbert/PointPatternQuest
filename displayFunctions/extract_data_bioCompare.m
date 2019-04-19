@@ -1,9 +1,11 @@
 
 
 function extract_data_bioCompare
+%% Will display subplot figure of all the selected samples
+
 
 fetchError = 0; % Use if error estimation has already been done
-
+PARAMS.maxRMSE = 0.1; % Above the treshold, sample will be discarded
 
 %% load all data
 % Data must follow the .mat file example of
@@ -38,7 +40,8 @@ for file = 1:length(fileToOpen)
     %     end
     
     % find the experimental condition
-    bioCondition = regexprep(path,'.*/','');
+    [~, bioCondition, ~] = fileparts(path);
+    %     bioCondition = regexprep(path,'.*/','');
     fprintf('bioCondition = %s\n', bioCondition);
     
     
@@ -101,10 +104,27 @@ end
 variableNames = {'Sample','bioCondition','brainPart','distTest','Range','Strength','finalRMS','numPermut','fitMaxIter','R0','S0'};
 fullTable.Properties.VariableNames = variableNames;
 
-if fetchError
+if fetchError % If hessian and associated error has been estimated
     errorTable.Properties.VariableNames = {'RMS_Rferror', 'RMS_Sferror', 'RMSf2nd_RR', 'RMSf2nd_SS'};
     fullTable = horzcat(fullTable,errorTable);
 end
+
+
+if ~isnan(PARAMS.maxRMSE) % if you want to reject some data based on their RMSE
+    rejectedSample_RMSEbased = fullTable(fullTable.finalRMS>PARAMS.maxRMSE, :);
+    fullTable(fullTable.finalRMS>PARAMS.maxRMSE, :) = [];
+    if height(rejectedSample_RMSEbased)>0 % if at least one sample has been rejected 
+        fprintf("WARNING, there's been %d rejected samples\n", height(rejectedSample_RMSEbased));
+        for indiv = 1:height(rejectedSample_RMSEbased)
+            fprintf('sample name = %s\nstatTest=%s\tRMSE=%f\tbrainPart=%s\n', ...
+                rejectedSample_RMSEbased.Sample{indiv}, ...
+                rejectedSample_RMSEbased.distTest{indiv}, ...
+                rejectedSample_RMSEbased.finalRMS(indiv), ...
+                rejectedSample_RMSEbased.brainPart{indiv});
+        end
+    end
+end
+
 
 
 %% Parse and plot data in a subplot
@@ -113,6 +133,8 @@ fieldsToPlot = {'Range','Strength','finalRMS'};
 lineAxis = 'distTest';
 allBrainParts = unique(fullTable.brainPart);
 allBioConditions = unique(fullTable.bioCondition, 'stable');
+% % temp change
+% temp = {'Cond1' 'Cond2' 'Cond3' 'Cond4' 'Cond5' 'Cond6'}';
 scatterDotStyle = {'v','o','s','^','d','+'};
 
 figure
@@ -172,6 +194,7 @@ for lineValNth = 1:numel(statTests)
         if numel(allBrainParts)==1
             xticks(1:numel(allBioConditions))
             xticklabels(allBioConditions);
+            %             xticklabels(temp); => to create fake names
             xtickangle(45);
             current.XAxis.Limits = [0 numel(allBioConditions)+1];
         else
