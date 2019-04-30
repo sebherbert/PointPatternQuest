@@ -1,8 +1,7 @@
 
-%% explore RMS map version v2p1
 
-% load ...dataCombined_RMSMap
-% CAUTION, will load the whole file into MATLAB, easily eating 60Go of RAM
+function RMSmap_display(dataCombined_RMSMap, saveFilePath)
+%% explore RMS map version v2p1
 
 % get list of models
 fieldList = fieldnames(dataCombined_RMSMap);
@@ -15,7 +14,7 @@ for field = 1:numel(fieldList) % for each field
         allModels = vertcat(allModels, ...
             table(dataCombined_RMSMap.(fieldList{field}).effectRange, ...
             dataCombined_RMSMap.(fieldList{field}).effectStrength, ...
-            dataCombined_RMSMap.(fieldList{field}).t3vst2.medRMS));
+            dataCombined_RMSMap.(fieldList{field}).t3vst3.medRMS));
     end
 end
 variableNames = {'Range','Strength','finalRMS'};
@@ -28,6 +27,7 @@ Strengthmap = reshape(allModels.Strength,[numel(unique(allModels.Strength)),nume
 
 
 % surf(Rs, Ss, statMap, 'EdgeColor', 'None', 'FaceColor', 'interp');
+figure
 surf(Rangemap, Strengthmap, RMSEmap, 'EdgeColor', 'None', 'FaceColor', 'interp');
 
 xlabel('Range (\mum)'); ylabel('Strength');
@@ -38,6 +38,11 @@ colorbar
 az = 0;
 el = 90;
 view(az, el);
+
+saveas(gcf,sprintf('%s_t3vst3_RMSEmap', saveFilePath));
+saveas(gcf,sprintf('%s_t3vst3_RMSEmap.png', saveFilePath));
+
+end
 
 
 
