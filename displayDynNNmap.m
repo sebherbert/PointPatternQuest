@@ -34,7 +34,7 @@ for DTfield = PARAMS.display.deltaTOIs(1):PARAMS.display.deltaTOIs(end)
     end
     
     legend({sprintf('GlobMin= %0.3f', inNNana.(DTfields{DTfield}).(statTest).minVal)...
-        sprintf('%s %smap',statTest, isoStatus)}, 'Location', 'northeast');
+        sprintf('%s %smap',statTest, isoStatus)}, 'Location', 'southoutside');
 
     title(sprintf('%s, N=%d',DTfields{DTfield},inNNana.(DTfields{DTfield}).exp.Ncells));
     xlabel('Range (\mum)'); ylabel('Strength');

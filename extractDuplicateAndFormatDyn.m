@@ -22,14 +22,22 @@ vars = opts.SelectedVariableNames;
 spotmother = spotmother(:,vars);
 
 
-type1File = uipickfiles('Prompt',... % type1 file
-    'Select the data file containing the type1 spots (ex: titi_dm_spot_type1.csv) to analyze', 'NumFile', 1);
-% Delete empty columns
-opts = detectImportOptions(type1File{1});
-spottype1 = readtable(type1File{1},opts);
-vars = opts.SelectedVariableNames;
-spottype1 = spottype1(:,vars);
-
+type1File = uipickfiles('Prompt',... % type1 file (can be more than 1)
+    'Select the data file containing the type1 spots (ex: titi_dm_spot_type1.csv) to analyze');
+spottype1 = table;
+for file = 1:size(type1File,2)
+    % Delete empty columns
+    opts = detectImportOptions(type1File{file});
+    tempType1 = readtable(type1File{file},opts);
+    vars = opts.SelectedVariableNames;
+    if isempty(spottype1)
+        spottype1 = tempType1(:,vars);
+    else
+        spottype1 = [spottype1; tempType1(:,vars)];
+    end
+end
+    
+    
 type2File = uipickfiles('Prompt',... % type2 file
     'Select the data file containing the type2 spots (ex: titi_dm_spot_type2.csv) to analyze', 'NumFile', 1);
 % Delete empty columns
@@ -38,12 +46,21 @@ spottype2 = readtable(type2File{1},opts);
 vars = opts.SelectedVariableNames;
 spottype2 = spottype2(:,vars);
 
+% Save used paths
+allPath = [motherFile type1File type2File];
+
+
 % % load spot files (for example titi_dm_spot_mother.csv)
 % % manual => For legacy maintenance => If issue with the format of the
 % columns of Unit
 
-
-spotmother.cellTypeDm = [];
+% Get rid of manually inserted user definitions...
+if ismember('cellTypeDm', spotmother.Properties.VariableNames)
+    spotmother.cellTypeDm = [];
+end
+if ismember('NicoTypeSpots', spottype2.Properties.VariableNames)
+    spottype2.NicoTypeSpots = [];
+end
 
 % Add the cell type to the data table
 motherType = table(cell(height(spotmother),1),'VariableNames',{'cellType'});
@@ -156,7 +173,7 @@ fullDataLive = fullData;
 
 fullDataLive(:,{'Category','Collection'}) = [];
 
-save('liveDataCurated','fullDataLive');
+save('liveDataCurated','fullDataLive','allPath');
 
 end
 

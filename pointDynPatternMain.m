@@ -22,7 +22,7 @@ PARAMS.dataFile.input = uipickfiles('Prompt',...
 % analysis
 % Reminder that mother are duplicated in the type2!
 PARAMS.pops = table;
-PARAMS.pops = vertcat(PARAMS.pops,cell2table({{'mother'}, {'mother'}, {'type2'}}));
+% PARAMS.pops = vertcat(PARAMS.pops,cell2table({{'mother'}, {'mother'}, {'type2'}}));
 PARAMS.pops = vertcat(PARAMS.pops,cell2table({{'mother'}, {'mother'}, {'type2';'type1'}})); 
 PARAMS.pops.Properties.VariableNames = {'popSource' 'popTarget' 'popPermut'};
 
@@ -70,11 +70,11 @@ tic
 for exper = 1:numel(PARAMS.dataFile.input)
     [PARAMS.dataFile.path{exper},PARAMS.dataFile.name{exper},~] = fileparts(PARAMS.dataFile.input{exper});
     PARAMS.dataFile.path{exper} = [PARAMS.dataFile.path{exper}, filesep];
-    fullDataLive = load(PARAMS.dataFile.input{exper});
+    temp = load(PARAMS.dataFile.input{exper}, 'fullDataLive');
     
     % Rename data file to always be fullDataLive
-    fooFN = fieldnames(fullDataLive);
-    fullDataLive = fullDataLive.(fooFN{1});
+    fooFN = fieldnames(temp);
+    fullDataLive = temp.(fooFN{1});
     
     % Set PARAMS to fit the movie of interest
     PARAMS.movie.maxTp = max(fullDataLive.Time);
