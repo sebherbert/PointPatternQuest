@@ -1,5 +1,5 @@
 
-function expVScsr_display(dataCombined_RMSMap, saveFilePath)
+function expVScsr_display(dataCombined_RMSMap, saveFilePath, popTestsFields)
 %% Display a CDF of the experimental data vs Complete Spatial Randomness
 % version v0p1
 
@@ -13,7 +13,7 @@ PARAMS = dataCombined_RMSMap.PARAMS;
 
 % get list of models
 fieldList = fieldnames(dataCombined_RMSMap);
-popTestsFields = {'t2vst2', 't3vst3', 't3vst2'};
+% popTestsFields = {'t2vst2', 't3vst3', 't3vst2'};
 
 % get table of results
 allCSRs = {};
@@ -41,6 +41,7 @@ for field = 1:numel(fieldList) % for each field
                 % Save some results specific to this popCross
                 allCSRs.(popCross).PARAMS = ...
                     dataCombined_RMSMap.(fieldList{field}).(popCross).PARAMS;
+                allCSRs.(popCross).PARAMS.model = 'Model = CSR'; % force model name to CSR
             
             end
             
@@ -60,8 +61,13 @@ end
 for popTestsNum = 1:length(popTestsFields) % For each pop cross test
     popCross = popTestsFields{popTestsNum};
     figure
+    dispMaxFitCDF = 0;
     displayNNCDFs(allCSRs.(popCross).expCDFs, allCSRs.(popCross).simuCDFs, ...
-        allCSRs.(popCross).PARAMS, allCSRs.(popCross).PARAMS.useRMSMaxDist);
+        allCSRs.(popCross).PARAMS, dispMaxFitCDF);
+    [~,fileName,~] = fileparts(saveFilePath);
+    fileName = regexprep(fileName,'(?<=tp\d).*',''); % Crop filename after tp info
+    fileName = regexprep(fileName,'_',' ');
+    title(fileName); 
     saveas(gcf,sprintf('%s_%s_exp_VS_CSR', saveFilePath, popCross));
     saveas(gcf,sprintf('%s_%s_exp_VS_CSR.png', saveFilePath, popCross));
 end
