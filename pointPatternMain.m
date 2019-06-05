@@ -19,8 +19,8 @@ PARAMS.version = 'version0p1p10';
 
 %% Which cell type distribution effect to test
 PARAMS.dot2vst2 = 1;
-PARAMS.dot3vst3 = 1;
-PARAMS.dot3vst2 = 1;
+PARAMS.dot3vst3 = 0;
+PARAMS.dot3vst2 = 0;
 
 %% Global Display parameters
 PARAMS.dispDistrib_1 = 0;
@@ -36,7 +36,7 @@ PARAMS.saveIndivModel = 0; % When different Range or Strength are tested
 PARAMS.suffix = '_allTests'; % add a suffix to the filename of the save
 
 %% Optimization model parameters (fitting method)
-PARAMS.doOptimFit = 1; % Do an automated search for the best parameters
+PARAMS.doOptimFit = 0; % Do an automated search for the best parameters
 PARAMS.minFitRange = 5; % Minimum Range for the fitted model
 PARAMS.minFitStrength = 0; % Minimum Strength for the fitted model
 % Original values for the optimization function
@@ -64,8 +64,8 @@ PARAMS.effectMultiRange = 5.1:0.2:30; % Can be multiple values => Default
 % PARAMS.effectMultiRange = 5.1:2:20; %  => for dev values
 PARAMS.effectRangeU = 'µm';
 % Strength of the effect of a cell on its neighbours
-PARAMS.effectMultiStrength = logspace(log(1/16)/log(10),log(16)/log(10),17); % Can be multiple values
-% PARAMS.effectMultiStrength = 1; % Can be multiple values
+% PARAMS.effectMultiStrength = logspace(log(1/16)/log(10),log(16)/log(10),17); % Can be multiple values
+PARAMS.effectMultiStrength = 1; % Can be multiple values
 
 %% Merge cells that are too close together
 PARAMS.cellMerge.do = 1; % Do or do not
