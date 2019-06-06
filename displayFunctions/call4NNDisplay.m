@@ -24,11 +24,6 @@ popTestsFields = {'t2vst2'};
 %%%%%%%%%%%%%%%%%%%%%%%%% PARAMS %%%%%%%%%%%%%%%%%%%%%%%%% 
 
 
-
-
-
-
-
 filePaths = uipickfiles('Prompt',...
     'Select the correct file to analyse (ex: 180201_..._dmso24h_..._yzCASE1_all..._max3cellDia_RMSMap.mat)');
 
@@ -38,7 +33,7 @@ for file = 1:length(filePaths)
     
     [fpath, fname, ~] = fileparts(filePaths{file});    
     
-    fprintf('Processing file s%', fname);
+    fprintf('Processing file s%\n', fname);
     
     load(filePaths{file});
     
