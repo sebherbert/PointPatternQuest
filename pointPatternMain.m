@@ -20,7 +20,7 @@ PARAMS.version = 'version0p1p10';
 %% Which cell type distribution effect to test
 PARAMS.dot2vst2 = 1;
 PARAMS.dot3vst3 = 0;
-PARAMS.dot3vst2 = 0;
+PARAMS.dot3vst2 = 1;
 
 %% Global Display parameters
 PARAMS.dispDistrib_1 = 0;
@@ -36,7 +36,7 @@ PARAMS.saveIndivModel = 0; % When different Range or Strength are tested
 PARAMS.suffix = '_allTests'; % add a suffix to the filename of the save
 
 %% Optimization model parameters (fitting method)
-PARAMS.doOptimFit = 0; % Do an automated search for the best parameters
+PARAMS.doOptimFit = 1; % Do an automated search for the best parameters
 PARAMS.minFitRange = 5; % Minimum Range for the fitted model
 PARAMS.minFitStrength = 0; % Minimum Strength for the fitted model
 % Original values for the optimization function
@@ -58,17 +58,17 @@ PARAMS.cellDiameter = nan; % Will be set in Analysis function
 % Type of effect of a cell on its nearest neighbours can only be 'None',
 % 'Repulsion', 'Attraction'
 
-PARAMS.doMapRMSE = 1; % Do a map of specific models
+PARAMS.doMapRMSE = 0; % Do a map of specific models
 % Distance of effect of a cell on its neighbours
 PARAMS.effectMultiRange = 5.1:0.2:30; % Can be multiple values => Default
 % PARAMS.effectMultiRange = 5.1:2:20; %  => for dev values
 PARAMS.effectRangeU = 'µm';
 % Strength of the effect of a cell on its neighbours
-% PARAMS.effectMultiStrength = logspace(log(1/16)/log(10),log(16)/log(10),17); % Can be multiple values
-PARAMS.effectMultiStrength = 1; % Can be multiple values
+PARAMS.effectMultiStrength = logspace(log(1/16)/log(10),log(16)/log(10),17); % Can be multiple values
+% PARAMS.effectMultiStrength = 1; % Can be multiple values
 
 %% Merge cells that are too close together
-PARAMS.cellMerge.do = 1; % Do or do not
+PARAMS.cellMerge.do = 0; % Do or do not
 PARAMS.cellMerge.cellType = {2}; % Which cell type?
 PARAMS.cellMerge.distThresh = 5; % Distance below which cells should be merged
 
@@ -223,7 +223,9 @@ NNExp = table((1:length(S))',S',d123_1',[x,y,z]);
 NNExp.Properties.VariableNames = {'cellID','cellType','nearestNeighbour','pos3D'};
 
 % Merge cells that are too close together
-NNExp = mergeCloseCells(PARAMS, NNExp);
+if PARAMS.cellMerge.do
+    NNExp = mergeCloseCells(PARAMS, NNExp);
+end
 
 % Point pattern analysis Type 2 effect on Type 2 in Type 1+2 (first neighbor)
 if PARAMS.dot2vst2
@@ -343,26 +345,6 @@ for popOIs = 1:length(PARAMS.cellMerge.cellType)
     NNExp(NNExp.cellType == cellType2merge,:) = [];
     NNExp = [NNExp; cells2check];
     NNExp.cellID = [1:height(NNExp)]';
-    
-    %     figure
-    %     hold on
-    %     % Only deleted
-    %     scatter3(deletedCells.pos3D(:,1), deletedCells.pos3D(:,2), deletedCells.pos3D(:,3), 'or')
-    %     % Only created
-    %     scatter3(mergedCells.pos3D(:,1), mergedCells.pos3D(:,2), mergedCells.pos3D(:,3), 'ob')
-    %     % All the others
-    %     scatter3(cells2check.pos3D(:,1), cells2check.pos3D(:,2), cells2check.pos3D(:,3), 'ok')
-    %
-    %     for pairs = 1:length(cellPairsID)
-    %         plot3([NNExp.pos3D(NNExp.cellID == cellPairsID(pairs,1),1)...
-    %             NNExp.pos3D(NNExp.cellID == cellPairsID(pairs,2),1)], ...
-    %             [NNExp.pos3D(NNExp.cellID == cellPairsID(pairs,1),2)...
-    %             NNExp.pos3D(NNExp.cellID == cellPairsID(pairs,2),2)],...
-    %             [NNExp.pos3D(NNExp.cellID == cellPairsID(pairs,1),3)...
-    %             NNExp.pos3D(NNExp.cellID == cellPairsID(pairs,2),3)],...
-    %             'LineWidth',2)
-    %     end
-    %     axis equal
     
 end
 
