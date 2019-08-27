@@ -35,18 +35,8 @@ PARAMS.dispModelsOverlay = 0; % When different Range or Strength are tested
 PARAMS.saveIndivModel = 0; % When different Range or Strength are tested
 PARAMS.suffix = '_allTests'; % add a suffix to the filename of the save
 
-%% Optimization model parameters (fitting method)
-PARAMS.doOptimFit = 1; % Do an automated search for the best parameters
-PARAMS.minFitRange = 5; % Minimum Range for the fitted model
-PARAMS.minFitStrength = 0; % Minimum Strength for the fitted model
-% Original values for the optimization function
-PARAMS.doVarFitInit = 0; % => optiR0 and optiS0 will be changing the folder name
-PARAMS.useRangeCDF50 = 1; % Boolean to exchange the cdf 
-PARAMS.optiR0 = 10; % µm Range => WARNING WILL BE OVERWRITTEN IF doVarFitInit
-PARAMS.optiS0 = 1; % Dispersion Strength  => WARNING WILL BE OVERWRITTEN IF doVarFitInit
-PARAMS.fitMaxIter = 200; % Nbr of iterations for the min search % Default is 200
-PARAMS.numPermut = 1000; % Nbr of permutation for model estimation % Default is 1000
-PARAMS.doDisplayLiveFit = 0; % If you want to see the fit evolve live
+%% RMSE calculation parameters
+PARAMS.numPermut = 10; % Nbr of permutation for model estimation % Default is 1000
 PARAMS.useRMSMaxDist = 1; % if you want to use only a part of the RMS (as a function of the NN)
 PARAMS.maxDistFactor = 3; % times the cellDiameter for the RMS limit.
 if PARAMS.useRMSMaxDist % Automatically updates suffix name
@@ -54,14 +44,26 @@ if PARAMS.useRMSMaxDist % Automatically updates suffix name
 end
 PARAMS.cellDiameter = nan; % Will be set in Analysis function
 
+%% Optimization model parameters (fitting method)
+PARAMS.doOptimFit = 0; % Do an automated search for the best parameters
+PARAMS.minFitRange = 5; % Minimum Range for the fitted model
+PARAMS.minFitStrength = 0; % Minimum Strength for the fitted model
+% Original values for the optimization function
+PARAMS.doVarFitInit = 0; % => optiR0 and optiS0 will be changing the folder name
+PARAMS.doDisplayLiveFit = 0; % If you want to see the fit evolve live
+PARAMS.useRangeCDF50 = 1; % Boolean to exchange the cdf 
+PARAMS.optiR0 = 10; % µm Range => WARNING WILL BE OVERWRITTEN IF doVarFitInit
+PARAMS.optiS0 = 1; % Dispersion Strength  => WARNING WILL BE OVERWRITTEN IF doVarFitInit
+PARAMS.fitMaxIter = 200; % Nbr of iterations for the min search % Default is 200
+
 %% Hard coded model parameters (map method)
 % Type of effect of a cell on its nearest neighbours can only be 'None',
 % 'Repulsion', 'Attraction'
 
-PARAMS.doMapRMSE = 0; % Do a map of specific models
+PARAMS.doMapRMSE = 1; % Do a map of specific models
 % Distance of effect of a cell on its neighbours
-PARAMS.effectMultiRange = 5.1:0.2:30; % Can be multiple values => Default
-% PARAMS.effectMultiRange = 5.1:2:20; %  => for dev values
+% PARAMS.effectMultiRange = 5.1:0.2:30; % Can be multiple values => Default
+PARAMS.effectMultiRange = 5.1:2:20; %  => for dev values
 PARAMS.effectRangeU = 'µm';
 % Strength of the effect of a cell on its neighbours
 PARAMS.effectMultiStrength = logspace(log(1/16)/log(10),log(16)/log(10),17); % Can be multiple values
