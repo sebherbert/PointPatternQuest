@@ -32,7 +32,7 @@ for popTestsNum = 1:length(popTestsFields)
     
     saveMapImage(Rangemap, Strengthmap, RMSEmap, saveFilePath, popTests)
     
-    % saveMapTable(Rangemap, Strengthmap, RMSEmap, saveFilePath, popTests)
+    saveMapTable(Rangemap, Strengthmap, RMSEmap, saveFilePath, popTests)
 end
 
 end
@@ -60,11 +60,17 @@ end
 
 
 function saveMapTable(Rangemap, Strengthmap, RMSEmap, saveFilePath, popTests)
-% save the map table
+% save the map values
 
-% reformat the RMSEmap as a clean table
-mapTable = table();
+% Since it can't saved simply as table (due to errors in column name
+% formats which are number) the table is saved as a single mat. Range is in
+% column, Strength is in line
 
+rangeLine = [nan Rangemap(1,:)]; % + a nan to fit in the strength legend column
+strengthCol = Strengthmap(:,1);
+finalTable = double( vertcat( rangeLine, horzcat( strengthCol, RMSEmap ) ) );
 
+% save the table to a csv format
+csvwrite(sprintf('%s_%s_RMSEtable.csv', saveFilePath, popTests), finalTable);
 
 end
