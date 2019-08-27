@@ -6,6 +6,7 @@ function call4NNDisplay()
 Single call function for displays of data post processing
 Can call for:
 - RMSE map
+- Saving map table in a simple format
 - exp vs CSR cdfs
 
 
@@ -16,8 +17,8 @@ CAUTION, will load the whole file into MATLAB, easily eating 60Go of RAM
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%% PARAMS %%%%%%%%%%%%%%%%%%%%%%%%% 
-doRMSmap = 0;
-doCSR = 1;
+doRMSmap = 1;
+doCSR = 0;
 % popTestsFields = {'t2vst2', 't3vst3', 't3vst2'};
 popTestsFields = {'t2vst2'};
 
@@ -39,7 +40,7 @@ for file = 1:length(filePaths)
     
     saveFilePath = fullfile(fpath, regexprep(fname, '_RMSMap', ''));
     if doRMSmap
-        RMSmap_display(dataCombined_RMSMap, saveFilePath);
+        RMSmap_display(dataCombined_RMSMap, saveFilePath, popTestsFields);
     end
     if doCSR
         expVScsr_display(dataCombined_RMSMap, saveFilePath, popTestsFields);
