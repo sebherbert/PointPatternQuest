@@ -47,8 +47,8 @@ PARAMS.movie.dt = NaN; % To be filled up after
 
 % Display parameters - map analysis
 PARAMS.display.deltaTOIs = [1 2 3 4 5 6];
-PARAMS.display.reproHistoWS.do = 1;
-PARAMS.display.reproHistoWS.useAllPermut = 1; % Will merge all the S=1 simulations for different R for the no effect pop
+PARAMS.display.histoExpVsCSR.do = 1;
+PARAMS.display.histoExpVsCSR.useAllPermut = 1; % Will merge all the S=1 simulations for different R for the no effect pop
 PARAMS.display.NNmap = 1;
 PARAMS.display.NNisoMap.do = 1; % If you want to interpolate
 PARAMS.display.NNisoMap.interFactor = 5; % Interpolation factor

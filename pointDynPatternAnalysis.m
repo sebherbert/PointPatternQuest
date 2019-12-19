@@ -61,10 +61,10 @@ if PARAMS.anaMap.doMap
             NNdispersion.simu.(pairString) = mergeDynNN(PARAMS, NNdistances.simus.(pairString));
                        
             %             % Reproduce the original histogram from WS
-            %             if ((PARAMS.display.reproHistoWS.do) && (PARAMS.anaMap.RSpairs.Ss(RSpair) == 1))
-            %                 reproHistoWS(PARAMS, NNdispersion.exp, NNdispersion.simu.(pairString), ...
+            %             if ((PARAMS.display.histoExpVsCSR.do) && (PARAMS.anaMap.RSpairs.Ss(RSpair) == 1))
+            %                 histoExpVsCSR(PARAMS, NNdispersion.exp, NNdispersion.simu.(pairString), ...
             %                     PARAMS.display.deltaTOIs, permutPopNames);
-            %                 PARAMS.display.reproHistoWS.do = 0;
+            %                 PARAMS.display.histoExpVsCSR.do = 0;
             %             end
             
         end
@@ -102,8 +102,8 @@ if PARAMS.anaMap.doMap
     end
     
     % Reproduce the original histogram from WS
-    if PARAMS.display.reproHistoWS.do
-        reproHistoWS(PARAMS, NNdispersion, NNana, DTfields, permutPopNames);
+    if PARAMS.display.histoExpVsCSR.do
+        histoExpVsCSR(PARAMS, NNdispersion, NNana, DTfields, permutPopNames);
     end    
     
     if PARAMS.display.NNmap % Launch display of maps
@@ -170,7 +170,7 @@ end
 
 
 
-function reproHistoWS(PARAMS, NNdispersion, NNana, DTfields, permutPopNames)
+function histoExpVsCSR(PARAMS, NNdispersion, NNana, DTfields, permutPopNames)
 % This function aims a the reproduction of the already provided simu
 % histogram vs exp average when no effect are set in the model.
 % display only the deltaTOIs deltaT. (array of double)
