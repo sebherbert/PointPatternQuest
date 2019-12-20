@@ -5,9 +5,10 @@ Sebastien Herbert herbert.sebastien@gmail.com
 
 ***
 
+Matlab version R2017b
+
 Required Matlab libraries
 - https://fr.mathworks.com/matlabcentral/fileexchange/10867-uipickfiles-uigetfile-on-steroids
-
 
 
 ***
@@ -17,7 +18,7 @@ Required Matlab libraries
 
 Reformat the cell types exported in .csv format by Imaris into a single MATLAB file using the `extractDuplicateAndFormatDyn.m` function. The processing also checks that there are no duplicates in the files.
 
-- This function will ask for the 3 expected cell types. Look at the csv files for an example. (Attention: there can be more than 1 input file for the type 1 population)
+- This function will ask for the 3 expected cell types. Look at the csv files for an example. (Attention: there can be more than 1 input file for the type 1 population, mother cells are duplicated into the type2 population)
 - Each file will be converted into a MATLAB table concatenated with the others and tested for duplicates. Duplicates are of 3 kinds:
   - duplicated cells are type2 and mother
   - duplicated cells are of the same cell type
@@ -55,3 +56,15 @@ DataFiles:
 - **NNanalysis.mat**: Contains only the processed and analysed dispersion results
 - **NNdispersion.mat**: Contains only the dispersion results prior to analysis
 - **NNdistances.mat**: Contains only the distances
+
+
+***
+## For cell type dispersion in a static patern:
+
+- Entry point is `pointPatternMain.m`. All the relevant parameters are hard coded in the code.
+
+- In order to analyse the same data from a dynamic case to a static case, you have to preprocess the **livedataCurated.mat** file into a new one, fit for the static analysis. To do so, use the `formatDataDynToStat.m` function
+
+- `call4NNDisplay.m`: To display the RMSE map, save the map table in a simpler format and display the experimental vs CSR cdfs
+
+- `extract_data_bioCompare.m`: To display a subplot figure of all the selected samples
