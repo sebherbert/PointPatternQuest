@@ -15,7 +15,7 @@ clear
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PARAMETERS/ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 PARAMS = {};
-PARAMS.version = 'version0p1p10';
+PARAMS.version = 'version0p1p11';
 
 %% Which cell type distribution effect to test
 PARAMS.dot2vst2 = 1;
@@ -36,7 +36,7 @@ PARAMS.saveIndivModel = 0; % When different Range or Strength are tested
 PARAMS.suffix = '_allTests'; % add a suffix to the filename of the save
 
 %% RMSE calculation parameters
-PARAMS.numPermut = 10; % Nbr of permutation for model estimation % Default is 1000
+PARAMS.numPermut = 1000; % Nbr of permutation for model estimation % Default is 1000
 PARAMS.useRMSMaxDist = 1; % if you want to use only a part of the RMS (as a function of the NN)
 PARAMS.maxDistFactor = 3; % times the cellDiameter for the RMS limit.
 if PARAMS.useRMSMaxDist % Automatically updates suffix name
@@ -45,7 +45,7 @@ end
 PARAMS.cellDiameter = nan; % Will be set in Analysis function
 
 %% Optimization model parameters (fitting method)
-PARAMS.doOptimFit = 0; % Do an automated search for the best parameters
+PARAMS.doOptimFit = 1; % Do an automated search for the best parameters
 PARAMS.minFitRange = 5; % Minimum Range for the fitted model
 PARAMS.minFitStrength = 0; % Minimum Strength for the fitted model
 % Original values for the optimization function
@@ -60,10 +60,10 @@ PARAMS.fitMaxIter = 200; % Nbr of iterations for the min search % Default is 200
 % Type of effect of a cell on its nearest neighbours can only be 'None',
 % 'Repulsion', 'Attraction'
 
-PARAMS.doMapRMSE = 1; % Do a map of specific models
+PARAMS.doMapRMSE = 0; % Do a map of specific models
 % Distance of effect of a cell on its neighbours
-% PARAMS.effectMultiRange = 5.1:0.2:30; % Can be multiple values => Default
-PARAMS.effectMultiRange = 5.1:2:20; %  => for dev values
+PARAMS.effectMultiRange = 5.1:0.2:30; % Can be multiple values => Default
+% PARAMS.effectMultiRange = 5.1:2:20; %  => for dev values
 PARAMS.effectRangeU = 'µm';
 % Strength of the effect of a cell on its neighbours
 PARAMS.effectMultiStrength = logspace(log(1/16)/log(10),log(16)/log(10),17); % Can be multiple values
@@ -72,7 +72,7 @@ PARAMS.effectMultiStrength = logspace(log(1/16)/log(10),log(16)/log(10),17); % C
 %% Merge cells that are too close together
 PARAMS.cellMerge.do = 0; % Do or do not
 PARAMS.cellMerge.cellType = {2}; % Which cell type?
-PARAMS.cellMerge.distThresh = 5; % Distance below which cells should be merged
+PARAMS.cellMerge.distThresh = 5; % Distance below which cell pairs should be merged
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% /PARAMETERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
